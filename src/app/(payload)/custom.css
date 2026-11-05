@@ -1,0 +1,31 @@
+/* Hallmark · handoff · The Pink House Payload admin chrome. */
+:root {
+  --theme-elevation-0: #fdf9f9;
+  --theme-elevation-50: #f7ecee;
+  --theme-elevation-100: #f6dde0;
+  --theme-elevation-200: #e9c9cd;
+  --theme-bg: #fdf9f9;
+  --theme-input-bg: #fffafa;
+  --theme-text: #4a1922;
+}
+
+.template-default__wrap {
+  background: var(--theme-bg);
+}
+
+.nav {
+  background: #4a1922;
+}
+
+.nav a {
+  color: #fdf9f9;
+}
+
+.nav a:hover {
+  color: #dfb15b;
+}
+
+.template-default .btn--style-primary {
+  background: #dfb15b;
+  color: #4a1922;
+}
