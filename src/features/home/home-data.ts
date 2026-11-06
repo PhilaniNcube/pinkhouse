@@ -5,7 +5,7 @@ import { cache } from 'react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import type { Media } from '@/payload-types'
+import type { GalleryItem, Media } from '@/payload-types'
 import {
   buildAvailabilitySnapshot,
   findNextDate,
@@ -44,6 +44,7 @@ export interface HomeData {
   bannerHeadline: string
   showSpecialsBanner: boolean
   gallery: GalleryPhoto[]
+  heroPhoto: GalleryPhoto | null
   credits: Array<{ name: string; url: string | null }>
   availability: AvailabilitySnapshot
   suggestedStay: { checkIn: string; checkOut: string } | null
@@ -82,6 +83,22 @@ function mediaSource(media: number | Media | null | undefined): {
     height: media.height || 1067,
     credit: media.credit || null,
     creditUrl: media.creditUrl || null,
+  }
+}
+
+function toGalleryPhoto(item: GalleryItem): GalleryPhoto | null {
+  const source = mediaSource(item.image)
+  if (!source) return null
+
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    ...source,
+    alt:
+      source.alt && source.alt.trim().split(/\s+/).length > 2
+        ? source.alt
+        : `${item.title} at The Pink House`,
   }
 }
 
@@ -137,25 +154,55 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
   const featuredSpecial =
     allSpecials.find((special) => special.id === featuredSpecialId) ?? null
 
-  const gallery: GalleryPhoto[] = galleryResult.docs.flatMap((item) => {
-    const source = mediaSource(item.image)
-    if (!source) return []
-    return [
-      {
-        id: item.id,
-        title: item.title,
-        category: item.category,
-        ...source,
-        alt:
-          source.alt && source.alt.trim().split(/\s+/).length > 2
-            ? source.alt
-            : `${item.title} at The Pink House`,
-      },
-    ]
+  const galleryDocs = galleryResult.docs
+  const allGallery = galleryDocs.flatMap((item) => {
+    const photo = toGalleryPhoto(item)
+    return photo ? [photo] : []
+  })
+  const heroPhoto =
+    allGallery.find((photo) => photo.category === 'exterior') ??
+    allGallery[0] ??
+    null
+
+  const categoryOrder = [
+    'exterior',
+    'lounge',
+    'bedrooms',
+    'dining',
+    'kitchen',
+    'garden',
+  ] as const
+
+  const selectedGallery = categoryOrder.flatMap((category) => {
+    const candidates = allGallery.filter(
+      (item) => item.category === category,
+    )
+    if (!candidates.length) return []
+    if (category === 'exterior' && heroPhoto) {
+      const alternate = candidates.find(
+        (candidate) => candidate.id !== heroPhoto.id,
+      )
+      if (alternate) return [alternate]
+    }
+    if (category === 'lounge') {
+      const ownerLounge = candidates.find(
+        (candidate) => !/chandelier/i.test(candidate.title),
+      )
+      if (ownerLounge) return [ownerLounge]
+    }
+    if (category === 'bedrooms') {
+      const main = candidates.find((item) =>
+        /main|en-suite|ensuite/i.test(item.title),
+      )
+      return [main ?? candidates[0]]
+    }
+    return [candidates[0]]
   })
 
+  const gallery = selectedGallery.slice(0, 6)
+
   const creditMap = new Map<string, { name: string; url: string | null }>()
-  for (const item of gallery) {
+  for (const item of [...gallery, ...(heroPhoto ? [heroPhoto] : [])]) {
     if (!item.credit) continue
     if (!creditMap.has(item.credit)) {
       creditMap.set(item.credit, {
@@ -199,8 +246,10 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
     bannerHeadline:
       settings?.bannerHeadline ||
       'Book a function and a night in the house together, and save.',
-    showSpecialsBanner: settings?.showSpecialsBanner ?? true,
+    showSpecialsBanner:
+      (settings?.showSpecialsBanner ?? true) && allSpecials.length > 0,
     gallery,
+    heroPhoto,
     credits: Array.from(creditMap.values()),
     availability,
     suggestedStay,

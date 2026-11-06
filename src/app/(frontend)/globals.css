@@ -1,9 +1,8 @@
-/* Hallmark · shape: Invitation House · genre: editorial · theme: custom · job: book · idea: "Open the gate like an invitation: a private Harare house, its garden, its host and its keys offered in one warm editorial gesture." · vibe: "blush stone, burgundy ink, gold leaf" · paper: oklch(98.52% 0.006 15) · accent: oklch(78.5% 0.117 81.3) · display: Raleway · body: Raleway · hero: a split editorial opening, an arched house photograph with a 2007 Makoni Street plaque beside the welcome and the two rates; the live booking bar sits in the hero foot · nav: a burgundy announcement strip over a cream sticky wordmark bar with a gold Book now and phone badge · footer: a burgundy mast with the house contacts, links and a stand-in photography credit line · imagery: six licensed photographs, warm treatment · signature: the 2007 plaque over the gate photograph and the live booking ledger with gold dates · axes: light/grotesk-light/warm · posture: restrained · contrast: pass · fold: pass · v2.0.0 · hero-review: pending · finish-review: pending */
+/* Hallmark · shape: Invitation House · genre: editorial · theme: custom · job: book · idea: "Open the gate like an invitation: a private Harare house, its garden, its host and its keys offered in one warm editorial gesture." · vibe: "blush stone, burgundy ink, gold leaf" · paper: oklch(98.52% 0.006 15) · accent: oklch(78.5% 0.117 81.3) · display: Raleway · body: Raleway · hero: a split editorial opening, an arched house photograph with a 2007 Makoni Street plaque beside the welcome and the two rates; the live booking bar sits in the hero foot · nav: a burgundy announcement strip over a cream sticky wordmark bar with a gold Book now and phone badge · footer: a burgundy mast with the house contacts, links and photography credits · imagery: six curated property photographs in R2, warm treatment, credits shown where supplied · signature: the 2007 plaque over the gate photograph and the live booking ledger with gold dates · axes: light/grotesk-light/warm · posture: restrained · contrast: pass · fold: pass · v2.0.0 · hero-review: fix · 5 findings · 4 resolved, owner headline retained · finish-review: subagent · 8 findings · 6 resolved, 2 partial, garden photography awaits the owner · gap: none */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 · weakest: V, an earlier plan was a generic hero over three offer cards; the address plaque, asymmetric specials and the burgundy booking ledger now carry the page. */
 /* Hallmark · waive 39b · six full-bleed gallery photographs, each tile is its own image target · the photograph is the content and the hit target here, while every button and visible close stays in the 44 to 52px band. */
 /* Hallmark · dismissed 23 · the featured special price uses the brief's gold accent on the burgundy card; the gold footprint including its button and badges stays under 5% of the viewport. */
-/* Hallmark · dismissed 28a · the hero gate photograph carries fetchpriority high; the house and gallery photographs sit well below the fold and lazy by design, so they are not the LCP. */
-/* Hallmark · answered F20 · the tall lead special spans two rows while the two shorter offers stack beside it, so the specials grid has no orphan. */
+/* Hallmark · dismissed 28a · the hero gate photograph carries fetchpriority high; the house, gallery and special photographs sit well below the fold and lazy by design, so they are not the LCP. */
 @import "tailwindcss";
 
 :root {
@@ -884,7 +883,7 @@ button { color: inherit; }
 .quick-booking__error { margin-block-start: var(--space-xs); font-size: var(--text-xs); color: var(--color-error-light); }
 
 /* House */
-.house-section { padding-block: var(--section-gap) var(--section-gap-l); }
+.house-section { padding-block: var(--section-gap-l); }
 .house-body {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -1048,6 +1047,9 @@ button { color: inherit; }
   color: var(--color-night-ink);
   border-color: var(--color-night);
 }
+.specials-grid[data-count="1"] .special-card--lead,
+.specials-grid[data-count="2"] .special-card--lead { grid-row: span 1; }
+.specials-grid[data-count="1"] .special-card { grid-column: 1 / -1; }
 .special-card__top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
 .special-badge {
   display: inline-flex;
@@ -1144,9 +1146,8 @@ button { color: inherit; }
 .gallery-item:nth-child(1) img { object-position: 50% 48%; }
 .gallery-item:nth-child(3) img { object-position: 50% 45%; }
 .gallery-item:nth-child(4) img { object-position: 50% 55%; }
-.gallery-item:nth-child(6) img { object-position: 50% 60%; }
+.gallery-item:nth-child(6) img { object-position: 50% 38%; }
 .gallery-item__caption { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-sm); min-height: 1.4em; font-size: var(--text-sm); line-height: 1.4; }
-.gallery-item__caption small { color: var(--color-muted); font-size: 0.75rem; }
 .gallery-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
 .gallery-item:active .gallery-item__caption span { text-decoration: underline; text-decoration-color: var(--color-accent-deep); }
 @media (hover: hover) and (pointer: fine) {
@@ -1406,9 +1407,10 @@ button { color: inherit; }
 .enquiry-form__row > * { min-width: 0; }
 .enquiry-form .ph-input, .enquiry-form .ph-native-select, .enquiry-form .ph-select-trigger { background-color: var(--color-paper); }
 .enquiry-form .ph-textarea { min-height: 136px; }
-.enquiry-form__actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-md); justify-content: space-between; margin-block-start: var(--space-xs); }
-.enquiry-form__quick { display: flex; align-items: center; gap: var(--space-md); font-size: var(--text-xs); }
-.enquiry-form__quick a { display: inline-flex; align-items: center; gap: var(--space-xs); min-height: 44px; color: var(--color-ink-2); }
+.enquiry-form__actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-md); margin-block-start: var(--space-xs); }
+.enquiry-form .date-display { color: var(--color-ink); }
+.enquiry-form .date-display--empty { color: var(--color-muted); }
+.quick-booking .date-display--empty { color: var(--color-night-muted); }
 .enquiry-form__quick svg { color: var(--color-accent-deep); }
 
 /* Footer */
@@ -1432,7 +1434,7 @@ button { color: inherit; }
 .footer-phone { display: inline-block; margin-block: var(--space-sm); color: var(--color-night-ink); font-size: 1.3rem; font-weight: 600; text-decoration: none; }
 .footer-phone:hover { color: var(--color-accent); }
 .footer-phone:active { color: var(--color-accent); }
-.site-footer__contact .ph-button { margin-block-start: var(--space-xs); }
+.site-footer__contact .ph-button { display: flex; width: fit-content; margin-block-start: var(--space-md); }
 .site-footer__bottom { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-xl); padding-block-start: var(--space-md); color: var(--color-night-muted); font-size: 0.75rem; line-height: 1.55; }
 .site-footer__bottom p { max-width: 70ch; }
 .photo-credits { max-width: 66ch !important; }
@@ -1515,8 +1517,19 @@ button { color: inherit; }
   .hero__plaque-number { font-size: 1.4rem; }
   .hero__detail-photo { display: none; }
   .quick-booking { padding: var(--space-md) var(--space-md) var(--space-sm); }
-  .quick-booking__tabs { gap: var(--space-md); }
-  .quick-booking__tab { min-width: max-content; }
+  .quick-booking__tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; overflow: visible; border: 1px solid var(--color-night-rule); border-radius: var(--radius-input); }
+  .quick-booking__tab {
+    min-height: 50px;
+    padding: var(--space-sm);
+    border-block-end: 1px solid var(--color-night-rule);
+    border-inline-end: 1px solid var(--color-night-rule);
+  }
+  .quick-booking__tab:nth-child(2n) { border-inline-end: 0; }
+  .quick-booking__tab:nth-last-child(-n + 2) { border-block-end: 0; }
+  .quick-booking__tab[data-active] {
+    background: color-mix(in oklch, var(--color-paper) 6%, transparent);
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+  }
   .quick-booking__fields { flex-direction: column; align-items: stretch; }
   .quick-booking__field, .quick-booking__field--special, .quick-booking__field--guests { flex-basis: auto; }
   .quick-booking__submit .ph-button { min-width: 0; }
@@ -1543,7 +1556,6 @@ button { color: inherit; }
   .gallery-mosaic:has(> .gallery-item:nth-child(6)) > .gallery-item:nth-child(4),
   .gallery-mosaic:has(> .gallery-item:nth-child(6)) > .gallery-item:nth-child(6) { grid-column: 2; grid-row: auto; }
   .gallery-item__caption { font-size: 0.75rem; }
-  .gallery-item__caption small { display: none; }
   .lightbox { padding: var(--space-sm); }
   .lightbox__title { font-size: 1.2rem; margin-block-end: var(--space-sm); }
   .booking-engine__left, .booking-engine__right { padding: var(--space-md); }
@@ -1560,7 +1572,6 @@ button { color: inherit; }
   .contact-card { padding: var(--space-lg) var(--space-md); }
   .contact-card__actions .ph-button { flex: 1 1 auto; }
   .enquiry-form__actions { align-items: flex-start; flex-direction: column; }
-  .enquiry-form__quick { flex-wrap: wrap; }
   .site-footer { padding-block: var(--space-2xl) var(--space-md); }
   .site-footer__top { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
   .site-footer__links { gap: var(--space-lg); }

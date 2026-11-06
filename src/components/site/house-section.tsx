@@ -20,9 +20,9 @@ export function HouseSection({ bedroom }: HouseSectionProps) {
     <section className="section house-section" id="the-house">
       <div className="container">
         <div className="section-heading section-heading--split">
-          <h2>Spacious comfort for families &amp; groups</h2>
+          <h2>The whole house, one key</h2>
           <p className="lead">
-            Four bedrooms, a chandelier lounge and a full kitchen.
+            Comfort for families &amp; groups.
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export function HouseSection({ bedroom }: HouseSectionProps) {
               <div className="photo-placeholder" aria-hidden="true" />
             )}
             <figcaption>
-              <span>The main bedroom</span>
+              <span>{bedroom?.title ?? 'The main bedroom'}</span>
               <span>Double bed, fitted wardrobe, en-suite</span>
             </figcaption>
           </figure>

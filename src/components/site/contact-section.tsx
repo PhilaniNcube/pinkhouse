@@ -11,7 +11,7 @@ export function ContactSection() {
         <div className="section-heading section-heading--split">
           <h2>Speak with Mrs Ncube</h2>
           <p className="lead">
-            A house, a garden and a careful host.
+            A house, a garden, a host.
           </p>
         </div>
 
@@ -20,7 +20,7 @@ export function ContactSection() {
             <div>
               <h3>Mrs Ncube</h3>
               <p className="contact-card__intro">
-                Call or WhatsApp to ask about dates or the house.
+                Call or WhatsApp about dates or the house.
               </p>
             </div>
 

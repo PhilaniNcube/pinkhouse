@@ -60,7 +60,7 @@ async function HomePage() {
 
       <main id="main">
         <Hero
-          gallery={data.gallery}
+          heroPhoto={data.heroPhoto}
           pricing={data.pricing}
           specials={data.specials}
           staySpecial={data.staySpecial}

@@ -6,7 +6,7 @@ import type { PublicSpecial, SitePricing } from '@/lib/pricing'
 import type { AvailabilitySnapshot } from '@/lib/availability'
 
 interface HeroProps {
-  gallery: GalleryPhoto[]
+  heroPhoto: GalleryPhoto | null
   pricing: SitePricing
   specials: PublicSpecial[]
   staySpecial: PublicSpecial | null
@@ -18,7 +18,7 @@ interface HeroProps {
 }
 
 export function Hero({
-  gallery,
+  heroPhoto,
   pricing,
   specials,
   staySpecial,
@@ -27,8 +27,7 @@ export function Hero({
   suggestedStay,
   suggestedFunctionDate,
 }: HeroProps) {
-  const exterior =
-    gallery.find((photo) => photo.category === 'exterior') ?? gallery[0]
+  const exterior = heroPhoto
 
   const checkIn = suggestedStay?.checkIn ?? availability.generatedOn
   const checkOut = suggestedStay?.checkOut ?? ''

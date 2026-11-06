@@ -38,7 +38,6 @@ export function GalleryGrid({ photos }: GalleryGridProps) {
             />
             <span className="gallery-item__caption">
               <span>{photo.title}</span>
-              <small>{photo.category}</small>
             </span>
           </button>
         ))}

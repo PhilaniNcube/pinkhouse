@@ -122,7 +122,7 @@ npm run generate:importmap
 
 The gallery is wired to Payload media and each item has a media credit. The repository includes licensed stand-in photography for the less specific rooms and garden; the media library already contains exterior and lounge photographs that can be used as the starting point.
 
-Replace any remaining stand-in images in **Admin → Gallery photographs** with original photographs of the actual house: all four bedrooms, the two extra toilets, the dining room, fitted kitchen, paved outdoor area, garden and the gated entrance. The footer credit line is generated from the media credit fields.
+Replace any remaining stand-in images in **Admin → Gallery photographs** with original photographs of the actual house: all four bedrooms, the two extra toilets, the dining room, fitted kitchen, paved outdoor area, garden and the gated entrance. The footer credit line is generated from the media credit fields. The homepage mosaic renders one photograph from each category, in this order: exterior, lounge, bedrooms, dining, kitchen, garden. Additional photographs can stay in the media library and be surfaced later.
 
 ## Deployment notes
 

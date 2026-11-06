@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
-import { MessageCircle, Phone } from 'lucide-react'
+import { CalendarDays, MessageCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ import {
   createEnquiryAction,
   type EnquiryActionState,
 } from './enquiry-actions'
+import { formatDate, todayISO } from '@/lib/dates'
 
 const initialEnquiryState: EnquiryActionState = { status: 'idle' }
 
@@ -35,6 +36,7 @@ export function EnquiryForm() {
     initialEnquiryState,
   )
   const [topic, setTopic] = useState('general')
+  const [preferredDate, setPreferredDate] = useState('')
   const formId = useId()
 
   return (
@@ -136,13 +138,30 @@ export function EnquiryForm() {
 
         <div className="form-field">
           <Label htmlFor="enquiry-date">Preferred date (optional)</Label>
-          <Input
-            id="enquiry-date"
-            name="preferredDate"
-            type="date"
-            min={new Date().toISOString().slice(0, 10)}
-            className="num"
-          />
+          <div className="field-with-icon date-field">
+            <CalendarDays aria-hidden="true" size={16} strokeWidth={1.6} />
+            <Input
+              id="enquiry-date"
+              name="preferredDate"
+              type="date"
+              value={preferredDate}
+              onChange={(event) => setPreferredDate(event.target.value)}
+              min={todayISO()}
+              className="num"
+            />
+            <span
+              className={`date-display${preferredDate ? '' : ' date-display--empty'}`}
+              aria-hidden="true"
+            >
+              {preferredDate
+                ? formatDate(preferredDate, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'Choose a date'}
+            </span>
+          </div>
         </div>
 
         <div className="form-field">
@@ -166,20 +185,6 @@ export function EnquiryForm() {
           <Button type="submit" size="large" disabled={isPending} aria-busy={isPending}>
             {isPending ? 'Sending enquiry…' : 'Send enquiry'}
           </Button>
-          <div className="enquiry-form__quick">
-            <a href="tel:+263772964425">
-              <Phone aria-hidden="true" size={15} strokeWidth={1.7} />
-              <span className="num">0772 964 425</span>
-            </a>
-            <a
-              href="https://wa.me/263772964425"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MessageCircle aria-hidden="true" size={15} strokeWidth={1.7} />
-              WhatsApp
-            </a>
-          </div>
         </div>
       </form>
     </div>

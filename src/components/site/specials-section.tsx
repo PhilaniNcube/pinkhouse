@@ -32,7 +32,10 @@ export function SpecialsSection({ specials, leadPhoto }: SpecialsSectionProps) {
         </div>
 
         {specials.length ? (
-          <div className="specials-grid">
+          <div
+            className="specials-grid"
+            data-count={Math.min(specials.length, 3)}
+          >
             {specials.map((special, index) => {
               const isLead = index === 0
               const bookingType = bookingTypeForSpecial(special.category)

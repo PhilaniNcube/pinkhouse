@@ -304,7 +304,7 @@ async function seed() {
   console.log('')
   console.log('The Pink House is ready.')
   console.log(`Frontend: ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}`)
-  console.log('Admin:    http://localhost:3000/admin')
+  console.log(`Admin:    ${(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '')}/admin`)
   console.log(`Featured special: ${celebrationBundle.title}`)
   console.log(`Extended stay: ${extendedStay.title}`)
   process.exit(0)
