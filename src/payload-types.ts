@@ -73,6 +73,8 @@ export interface Config {
     bookings: Booking;
     'contact-enquiries': ContactEnquiry;
     'availability-blocks': AvailabilityBlock;
+    'calendar-sources': CalendarSource;
+    'external-blocks': ExternalBlock;
     'gallery-items': GalleryItem;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,6 +89,8 @@ export interface Config {
     bookings: BookingsSelect<false> | BookingsSelect<true>;
     'contact-enquiries': ContactEnquiriesSelect<false> | ContactEnquiriesSelect<true>;
     'availability-blocks': AvailabilityBlocksSelect<false> | AvailabilityBlocksSelect<true>;
+    'calendar-sources': CalendarSourcesSelect<false> | CalendarSourcesSelect<true>;
+    'external-blocks': ExternalBlocksSelect<false> | ExternalBlocksSelect<true>;
     'gallery-items': GalleryItemsSelect<false> | GalleryItemsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -366,6 +370,80 @@ export interface AvailabilityBlock {
   createdAt: string;
 }
 /**
+ * External OTA iCal feeds (Airbnb, Booking.com and others). The sync service pulls reservations from these feeds and reopens dates when they disappear.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-sources".
+ */
+export interface CalendarSource {
+  id: number;
+  /**
+   * A friendly label, for example "Airbnb main listing".
+   */
+  name: string;
+  provider: 'airbnb' | 'booking' | 'other';
+  /**
+   * The private .ics export link from the OTA. This URL often contains a secret token, so treat it as a password. When AIRBNB_ICAL_URL or BOOKING_ICAL_URL is set, the sync service keeps the matching environment-managed source up to date.
+   */
+  icalUrl: string;
+  /**
+   * Set automatically for feeds created from AIRBNB_ICAL_URL or BOOKING_ICAL_URL. Leave blank for feeds added by hand.
+   */
+  envKey?: ('airbnb' | 'booking') | null;
+  /**
+   * Turn this off to pause a feed without deleting its stored blocks.
+   */
+  isActive?: boolean | null;
+  lastSyncedAt?: string | null;
+  lastSyncStatus?: ('success' | 'error') | null;
+  /**
+   * The most recent sync failure, if any.
+   */
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Reservations pulled from OTA iCal feeds. These are maintained by the sync service; edit them at the source (Airbnb, Booking.com) instead of here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "external-blocks".
+ */
+export interface ExternalBlock {
+  id: number;
+  source: number | CalendarSource;
+  /**
+   * The VEVENT UID from the OTA feed. It makes repeated syncs idempotent and lets cancellations reopen dates.
+   */
+  externalUid: string;
+  /**
+   * The first night the property is occupied.
+   */
+  startDate: string;
+  /**
+   * Exclusive check-out date, exactly as the OTA sends DTEND. The night before this date is the last occupied night.
+   */
+  endDate: string;
+  /**
+   * The OTA summary, for example "Reserved" or "Not available".
+   */
+  summary?: string | null;
+  /**
+   * The parsed VEVENT, kept for debugging.
+   */
+  rawEvent?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Photographs shown in the mosaic gallery. The room, garden and gate shots belong here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -427,6 +505,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'availability-blocks';
         value: number | AvailabilityBlock;
+      } | null)
+    | ({
+        relationTo: 'calendar-sources';
+        value: number | CalendarSource;
+      } | null)
+    | ({
+        relationTo: 'external-blocks';
+        value: number | ExternalBlock;
       } | null)
     | ({
         relationTo: 'gallery-items';
@@ -629,6 +715,36 @@ export interface AvailabilityBlocksSelect<T extends boolean = true> {
   endDate?: T;
   blockScope?: T;
   linkedBooking?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-sources_select".
+ */
+export interface CalendarSourcesSelect<T extends boolean = true> {
+  name?: T;
+  provider?: T;
+  icalUrl?: T;
+  envKey?: T;
+  isActive?: T;
+  lastSyncedAt?: T;
+  lastSyncStatus?: T;
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "external-blocks_select".
+ */
+export interface ExternalBlocksSelect<T extends boolean = true> {
+  source?: T;
+  externalUid?: T;
+  startDate?: T;
+  endDate?: T;
+  summary?: T;
+  rawEvent?: T;
   updatedAt?: T;
   createdAt?: T;
 }

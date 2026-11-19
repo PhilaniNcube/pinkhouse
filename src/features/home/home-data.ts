@@ -12,6 +12,7 @@ import {
   findNextStay,
   toBlockOccupancy,
   toBookingOccupancy,
+  toExternalBlockOccupancy,
   type AvailabilitySnapshot,
 } from '@/lib/availability'
 import { formatDate, todayISO } from '@/lib/dates'
@@ -106,34 +107,46 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
   const payload = await getPayload({ config })
   const today = todayISO()
 
-  const [settings, specialsResult, galleryResult, bookingsResult, blocksResult] =
-    await Promise.all([
-      payload.findGlobal({ slug: 'pricing-settings', depth: 1 }),
-      payload.find({
-        collection: 'specials',
-        where: { isActive: { equals: true } },
-        limit: 100,
-        depth: 0,
-        sort: 'createdAt',
-      }),
-      payload.find({
-        collection: 'gallery-items',
-        limit: 24,
-        depth: 2,
-        sort: 'displayOrder',
-      }),
-      payload.find({
-        collection: 'bookings',
-        where: { status: { in: ['pending', 'confirmed'] } },
-        limit: 1000,
-        depth: 0,
-      }),
-      payload.find({
-        collection: 'availability-blocks',
-        limit: 500,
-        depth: 0,
-      }),
-    ])
+  const [
+    settings,
+    specialsResult,
+    galleryResult,
+    bookingsResult,
+    blocksResult,
+    externalBlocksResult,
+  ] = await Promise.all([
+    payload.findGlobal({ slug: 'pricing-settings', depth: 1 }),
+    payload.find({
+      collection: 'specials',
+      where: { isActive: { equals: true } },
+      limit: 100,
+      depth: 0,
+      sort: 'createdAt',
+    }),
+    payload.find({
+      collection: 'gallery-items',
+      limit: 24,
+      depth: 2,
+      sort: 'displayOrder',
+    }),
+    payload.find({
+      collection: 'bookings',
+      where: { status: { in: ['pending', 'confirmed'] } },
+      limit: 1000,
+      depth: 0,
+    }),
+    payload.find({
+      collection: 'availability-blocks',
+      limit: 500,
+      depth: 0,
+    }),
+    payload.find({
+      collection: 'external-blocks',
+      where: { endDate: { greater_than_equal: today } },
+      pagination: false,
+      depth: 0,
+    }),
+  ])
 
   const pricing = settings ? toSitePricing(settings) : DEFAULT_PRICING
 
@@ -222,7 +235,16 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
     return occupancy ? [occupancy] : []
   })
 
-  const availability = buildAvailabilitySnapshot(occupancies, blocks)
+  const externalBlocks = externalBlocksResult.docs.flatMap((block) => {
+    const occupancy = toExternalBlockOccupancy(block)
+    return occupancy ? [occupancy] : []
+  })
+
+  const availability = buildAvailabilitySnapshot(
+    occupancies,
+    blocks,
+    externalBlocks,
+  )
   const suggestedStay =
     findNextStay(availability, 3, 150) ??
     findNextStay(availability, 1, 150)

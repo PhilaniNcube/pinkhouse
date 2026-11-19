@@ -12,7 +12,8 @@ The project is a Next.js 16 App Router application with Payload CMS, Tailwind CS
   - outdoor functions for up to 30 guests,
   - day services such as shoots and seminars,
   - function-and-stay special bundles.
-- Availability derived from confirmed and pending reservations plus manually entered availability blocks.
+- Two-way iCal availability sync: reservations are pulled from Airbnb (and Booking.com when enabled), and the site exposes its own `.ics` feed for OTAs to import.
+- Availability derived from confirmed and pending reservations, manually entered blocks and OTA reservations.
 - Special pricing with automatic minimum-night offers, fixed package prices, amount-off, percentage-off and per-night override rules.
 - Server-side availability and price calculation on submission. Client values are never trusted.
 - A real reservation request workflow, no online payment. Each request receives a reference such as `PH-2026-0042` and starts in `pending`.
@@ -78,6 +79,16 @@ R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 R2_PUBLIC_URL=https://pub-<hash>.r2.dev
+
+# OTA iCal feeds. Add Booking.com later simply by filling its URL.
+AIRBNB_ICAL_URL=https://www.airbnb.com/calendar/ical/<listing-id>.ics?s=<token>
+BOOKING_ICAL_URL=
+
+# Protects the sync endpoint.
+CRON_SECRET=replace-with-a-long-random-string
+
+# Optional protection for the outbound feed.
+CALENDAR_EXPORT_TOKEN=
 ```
 
 When all four non-public R2 values are present, the media collection uploads to R2 and file URLs use `R2_PUBLIC_URL`. The bucket must permit public reads, or you must serve it through a Cloudflare custom domain.
@@ -91,6 +102,8 @@ Payload types are generated into `src/payload-types.ts` with `npm run generate:t
 - **Bookings**: reference, booking type, event category, dates, nights, guest count, applied special, promo code, itemized totals, guest details, notes and status.
 - **Contact enquiries**: contact details, topic, preferred date, optional interested special, message, status and private follow-up notes.
 - **Availability blocks**: title, start/end dates and scope (`full-premises`, `accommodation-only`, `outdoor-only`).
+- **Calendar sources**: provider, feed URL, active state, last sync time, status and error. Feeds come from `AIRBNB_ICAL_URL` / `BOOKING_ICAL_URL` or can be added by hand in the admin.
+- **External blocks**: reservations synced from an OTA, keyed by the feed's `UID`, with exclusive check-out date and the raw event for debugging.
 - **Gallery items**: title, category, media relationship and display order.
 - **Media**: image, alt text, photographer credit and credit URL.
 
@@ -105,6 +118,51 @@ Payload types are generated into `src/payload-types.ts` with `npm run generate:t
 - Availability blocks can be used for phone bookings, private holds or maintenance.
 - No card payment is collected. Mrs Ncube confirms each request in the admin.
 
+## Two-way iCal sync
+
+### Inbound: pulling OTA reservations
+
+Set `AIRBNB_ICAL_URL` to the private export link from the Airbnb listing. `BOOKING_ICAL_URL` is optional: when it is empty the sync skips Booking.com without failing, and adding the value later is the only step needed to enable it. Feeds can also be managed in **Admin → Integrations → Calendar sources**; environment-managed feeds are created and kept up to date automatically.
+
+Run the sync with:
+
+```bash
+npm run sync:ical
+```
+
+or hit the protected endpoint (Vercel Cron does this automatically from `vercel.json`, every 15 minutes):
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  https://thepinkhouse.co.zw/api/cron/sync-ical
+```
+
+The endpoint returns a per-source report. Each run:
+
+- fetches every active feed with a 15 second timeout and an identifying User-Agent,
+- parses each `VEVENT` with `node-ical`,
+- upserts blocks by `(source, UID)`, so repeated runs do not duplicate anything,
+- deletes blocks whose `UID` disappeared from the feed, so a cancelled OTA booking reopens the dates immediately,
+- records `lastSyncedAt`, `lastSyncStatus` and `lastError` on the calendar source.
+
+OTA `DTEND` is exclusive. A 10 to 12 November stay blocks the nights of 10 and 11 November and allows a new check-in on 12 November. The unified availability check applies the same exclusive check-out rule to direct bookings, manual admin blocks and OTA blocks, using `(requestedCheckIn < existingCheckOut) AND (requestedCheckOut > existingCheckIn)`.
+
+OTA reservations occupy the whole unit, so they block overnight stays and stay bundles. They do not automatically block a garden-only function or day service; use a full-premises availability block when the whole property must be held.
+
+> Vercel Hobby only allows daily cron jobs. If the project is on Hobby, call `/api/cron/sync-ical` from an external scheduler every 10–15 minutes, or keep the Vercel schedule once the project is on a plan that supports minute-level crons.
+
+### Outbound: exposing our calendar
+
+`GET /api/calendar/export.ics` returns a valid RFC 5545 calendar containing confirmed direct stays and manual blocks that affect accommodation. OTA-sourced blocks are excluded to prevent feedback loops. Pending requests and garden-only blocks are also excluded.
+
+Use the feed URL in Airbnb's and Booking.com's calendar import settings:
+
+```text
+https://thepinkhouse.co.zw/api/calendar/export.ics?token=$CALENDAR_EXPORT_TOKEN
+```
+
+When `CALENDAR_EXPORT_TOKEN` is empty the feed is public. Set it to a long random string to stop bots scraping the booking schedule. The response is sent with `Content-Type: text/calendar; charset=utf-8` and `Cache-Control: no-store, max-age=0`, and dates are exported as all-day `DTSTART;VALUE=DATE` / `DTEND;VALUE=DATE` pairs.
+
 ## Commands
 
 ```bash
@@ -114,6 +172,7 @@ npm run start        # serve the production build
 npm run typecheck    # TypeScript
 npm run lint         # ESLint
 npm run seed         # seed a blank database
+npm run sync:ical    # pull all active OTA iCal feeds now
 npm run generate:types
 npm run generate:importmap
 ```
@@ -144,6 +203,11 @@ src/features/enquiries/enquiry-actions.ts   Contact enquiry creation
 src/features/booking/booking-engine.tsx     Booking UI and price summary
 src/lib/pricing.ts                          Special and quote rules
 src/lib/availability.ts                     Calendar and conflict logic
+src/lib/ical/sync.ts                        Inbound OTA feed sync and upserts
+src/lib/ical/export.ts                      RFC 5545 availability calendar
+src/app/api/cron/sync-ical/route.ts         Protected sync endpoint
+src/app/api/calendar/export.ics/route.ts    Public/tokenized outbound feed
 src/app/(frontend)/globals.css              Design tokens and page system
 src/scripts/seed.ts                         Safe blank-database seed
+src/scripts/sync-ical.ts                    Manual sync command
 ```

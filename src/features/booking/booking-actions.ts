@@ -11,6 +11,7 @@ import {
   rangeWithinWindow,
   toBlockOccupancy,
   toBookingOccupancy,
+  toExternalBlockOccupancy,
 } from '@/lib/availability'
 import {
   addDays,
@@ -366,19 +367,26 @@ export async function createBookingAction(
     }
   }
 
-  const [bookingsResult, blocksResult] = await Promise.all([
-    payload.find({
-      collection: 'bookings',
-      where: { status: { in: ['pending', 'confirmed'] } },
-      limit: 1000,
-      depth: 0,
-    }),
-    payload.find({
-      collection: 'availability-blocks',
-      limit: 500,
-      depth: 0,
-    }),
-  ])
+  const [bookingsResult, blocksResult, externalBlocksResult] =
+    await Promise.all([
+      payload.find({
+        collection: 'bookings',
+        where: { status: { in: ['pending', 'confirmed'] } },
+        limit: 1000,
+        depth: 0,
+      }),
+      payload.find({
+        collection: 'availability-blocks',
+        limit: 500,
+        depth: 0,
+      }),
+      payload.find({
+        collection: 'external-blocks',
+        where: { endDate: { greater_than_equal: today } },
+        pagination: false,
+        depth: 0,
+      }),
+    ])
 
   const bookings = bookingsResult.docs.flatMap((booking) => {
     const value = toBookingOccupancy(booking)
@@ -388,7 +396,15 @@ export async function createBookingAction(
     const value = toBlockOccupancy(block)
     return value ? [value] : []
   })
-  const availability = buildAvailabilitySnapshot(bookings, blocks)
+  const externalBlocks = externalBlocksResult.docs.flatMap((block) => {
+    const value = toExternalBlockOccupancy(block)
+    return value ? [value] : []
+  })
+  const availability = buildAvailabilitySnapshot(
+    bookings,
+    blocks,
+    externalBlocks,
+  )
 
   if (
     !isRangeAvailable(availability, bookingType, checkInDate, checkOutDate)

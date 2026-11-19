@@ -6,7 +6,9 @@ import sharp from 'sharp'
 
 import { AvailabilityBlocks } from './collections/AvailabilityBlocks'
 import { Bookings } from './collections/Bookings'
+import { CalendarSources } from './collections/CalendarSources'
 import { ContactEnquiries } from './collections/ContactEnquiries'
+import { ExternalBlocks } from './collections/ExternalBlocks'
 import { GalleryItems } from './collections/GalleryItems'
 import { Media } from './collections/Media'
 import { Specials } from './collections/Specials'
@@ -47,6 +49,8 @@ export default buildConfig({
     Bookings,
     ContactEnquiries,
     AvailabilityBlocks,
+    CalendarSources,
+    ExternalBlocks,
     GalleryItems,
   ],
   globals: [PricingSettings],

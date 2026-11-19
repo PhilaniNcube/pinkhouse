@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/scripts/seed.ts",
+    "sync:ical": "tsx src/scripts/sync-ical.ts",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap"
   },
@@ -31,6 +32,7 @@
     "graphql": "^16.11.0",
     "lucide-react": "^0.548.0",
     "next": "16.4.5",
+    "node-ical": "^0.27.6",
     "payload": "3.93.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",

@@ -1,9 +1,14 @@
-import type { AvailabilityBlock, Booking } from '@/payload-types'
+import type {
+  AvailabilityBlock,
+  Booking,
+  ExternalBlock,
+} from '@/payload-types'
 
 import {
   addDays,
   eachDateInclusive,
   isAfter,
+  isBefore,
   isSameOrAfter,
   isSameOrBefore,
   nightsOfStay,
@@ -23,6 +28,16 @@ export interface BlockOccupancy {
   startDate: string
   endDate: string
   blockScope: string
+}
+
+/**
+ * A reservation pulled from an OTA iCal feed. `endDate` is the exclusive
+ * DTEND from the feed, so a 10 to 12 November stay occupies 10 and 11
+ * November and frees the property for a 12 November check-in.
+ */
+export interface ExternalBlockOccupancy {
+  startDate: string
+  endDate: string
 }
 
 export interface AvailabilitySnapshot {
@@ -109,10 +124,20 @@ export function toBlockOccupancy(
   }
 }
 
+export function toExternalBlockOccupancy(
+  block: Pick<ExternalBlock, 'startDate' | 'endDate'>,
+): ExternalBlockOccupancy | null {
+  const startDate = String(block.startDate ?? '').slice(0, 10)
+  const endDate = String(block.endDate ?? '').slice(0, 10)
+  if (!startDate || !endDate || !isAfter(endDate, startDate)) return null
+  return { startDate, endDate }
+}
+
 export function unavailableDatesFor(
   bookingType: BookingType,
   bookings: BookingOccupancy[],
   blocks: BlockOccupancy[],
+  externalBlocks: ExternalBlockOccupancy[] = [],
 ): ISODate[] {
   const dates = new Set<ISODate>()
 
@@ -128,18 +153,46 @@ export function unavailableDatesFor(
     }
   }
 
+  // OTA feeds only sell the whole unit, so they always block accommodation.
+  // A bundle includes a night in the house and is blocked as well. Functions
+  // and day services in the garden remain possible unless a manual block or a
+  // direct booking says otherwise.
+  if (bookingType === 'accommodation' || bookingType === 'special-bundle') {
+    for (const block of externalBlocks) {
+      for (const date of nightsOfStay(block.startDate, block.endDate)) {
+        dates.add(date)
+      }
+    }
+  }
+
   return uniqueInOrder([...dates])
 }
 
 export function buildAvailabilitySnapshot(
   bookings: BookingOccupancy[],
   blocks: BlockOccupancy[],
+  externalBlocks: ExternalBlockOccupancy[] = [],
 ): AvailabilitySnapshot {
   return {
-    accommodation: unavailableDatesFor('accommodation', bookings, blocks),
-    function: unavailableDatesFor('function', bookings, blocks),
-    dayService: unavailableDatesFor('day-service', bookings, blocks),
-    bundle: unavailableDatesFor('special-bundle', bookings, blocks),
+    accommodation: unavailableDatesFor(
+      'accommodation',
+      bookings,
+      blocks,
+      externalBlocks,
+    ),
+    function: unavailableDatesFor('function', bookings, blocks, externalBlocks),
+    dayService: unavailableDatesFor(
+      'day-service',
+      bookings,
+      blocks,
+      externalBlocks,
+    ),
+    bundle: unavailableDatesFor(
+      'special-bundle',
+      bookings,
+      blocks,
+      externalBlocks,
+    ),
     generatedOn: todayISO(),
   }
 }
@@ -254,4 +307,21 @@ export function datesOverlap(
   bEnd: ISODate,
 ): boolean {
   return isSameOrAfter(aEnd, bStart) && isSameOrBefore(aStart, bEnd)
+}
+
+/**
+ * Standard hospitality overlap test with exclusive check-out dates:
+ * `requestedCheckIn < existingCheckOut && requestedCheckOut > existingCheckIn`.
+ * A same-day check-out and check-in therefore do not overlap.
+ */
+export function rangesOverlap(
+  requestedCheckIn: ISODate,
+  requestedCheckOut: ISODate,
+  existingCheckIn: ISODate,
+  existingCheckOut: ISODate,
+): boolean {
+  return (
+    isBefore(requestedCheckIn, existingCheckOut) &&
+    isAfter(requestedCheckOut, existingCheckIn)
+  )
 }
