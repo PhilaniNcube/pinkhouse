@@ -136,12 +136,18 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Restricted to the three designated Pink House administrators: ncbphi001@gmail.com, pnavaya@yahoo.co.uk and everncube@gmail.com.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name: string;
+  /**
+   * Check this box and click Save to email a 7-day password setup link to this administrator via Resend.
+   */
+  sendInviteEmail?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -566,6 +572,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  sendInviteEmail?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

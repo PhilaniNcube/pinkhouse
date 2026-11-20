@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/scripts/seed.ts",
+    "invite:admins": "tsx src/scripts/invite-admins.ts",
     "sync:ical": "tsx src/scripts/sync-ical.ts",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap"
