@@ -98,7 +98,7 @@ function HeroSectionFallback() {
           </h1>
           <p className="hero__lead">
             A spacious 4-bedroom guesthouse and neat garden venue in peaceful
-            Mainway Meadows, Waterfalls, Harare.
+            Mainway Meadows, Waterfalls, Harare — close to the airport.
           </p>
         </div>
         <div className="hero__media">
@@ -211,6 +211,13 @@ async function StructuredDataServer() {
       : {}),
   }))
 
+  const nearestAirportEntity = {
+    '@type': 'Airport',
+    name: SITE.nearestAirport.name,
+    alternateName: [...SITE.nearestAirport.alternateNames],
+    iataCode: SITE.nearestAirport.iataCode,
+  }
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -230,7 +237,7 @@ async function StructuredDataServer() {
         '@type': 'WebPage',
         '@id': `${siteUrl}/#webpage`,
         url: siteUrl,
-        name: 'The Pink House | Guesthouse & Garden Venue in Waterfalls, Harare',
+        name: 'The Pink House | Guesthouse & Garden Venue Near Harare Airport',
         description: SITE.description,
         isPartOf: {
           '@id': `${siteUrl}/#website`,
@@ -241,6 +248,7 @@ async function StructuredDataServer() {
         mainEntity: {
           '@id': `${siteUrl}/#lodging`,
         },
+        mentions: [nearestAirportEntity],
         inLanguage: 'en-ZW',
         speakable: {
           '@type': 'SpeakableSpecification',
@@ -311,6 +319,7 @@ async function StructuredDataServer() {
             '@type': 'Country',
             name: 'Zimbabwe',
           },
+          nearestAirportEntity,
         ],
         contactPoint: [
           {
@@ -380,6 +389,11 @@ async function StructuredDataServer() {
             name: 'Secure gated perimeter on a quiet street',
             value: true,
           },
+          {
+            '@type': 'LocationFeatureSpecification',
+            name: SITE.nearestAirport.proximityLabel,
+            value: true,
+          },
         ],
         makesOffer: [
           {
@@ -387,7 +401,7 @@ async function StructuredDataServer() {
             '@id': `${siteUrl}/#offer-accommodation`,
             name: 'Overnight accommodation — full 4-bedroom house',
             description:
-              'Exclusive overnight stay in the full four-bedroom house, chandelier lounge, dining room, fitted kitchen and garden.',
+              'Exclusive overnight stay in the full four-bedroom house, chandelier lounge, dining room, fitted kitchen and garden — conveniently located close to Robert Gabriel Mugabe International Airport (HRE) in Waterfalls, Harare.',
             price: pricingBanner.pricing.accommodationNightlyRateUSD,
             priceCurrency: SITE.currency,
             availability: 'https://schema.org/InStock',

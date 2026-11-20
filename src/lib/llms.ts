@@ -48,7 +48,7 @@ export async function buildLlmsIndexMarkdown(): Promise<string> {
 
 > ${SITE.description}
 
-${SITE.name} (${siteUrl}) is a private, gated four-bedroom guesthouse and neat outdoor garden venue located at ${SITE.address}, ${SITE.country}. Every overnight reservation grants exclusive use of the entire house and garden under one key ("the whole house, one key"), hosted personally by ${SITE.host}.
+${SITE.name} (${siteUrl}) is a private, gated four-bedroom guesthouse and neat outdoor garden venue located at ${SITE.address}, ${SITE.country}, close to ${SITE.nearestAirport.name} (${SITE.nearestAirport.iataCode}). Every overnight reservation grants exclusive use of the entire house and garden under one key ("the whole house, one key"), hosted personally by ${SITE.host}.
 
 ## Quick Facts
 
@@ -56,6 +56,7 @@ ${SITE.name} (${siteUrl}) is a private, gated four-bedroom guesthouse and neat o
 - **Property Type**: Private whole-house guesthouse (4 double bedrooms) & outdoor garden function venue
 - **Address**: ${SITE.address}, ${SITE.country}
 - **Suburb / Area**: ${SITE.area}
+- **Airport Proximity**: ${SITE.nearestAirport.proximityLabel} (also known as ${SITE.nearestAirport.shortName})
 - **Host**: ${SITE.host}
 - **Phone & WhatsApp**: ${SITE.phoneE164} (Local display: ${SITE.phoneDisplay})
 - **WhatsApp Direct Link**: ${SITE.whatsappHref}
@@ -120,6 +121,8 @@ export async function buildLlmsFullMarkdown(): Promise<string> {
 - **Full Address**: ${SITE.address}, ${SITE.country}
 - **Geographic Coordinates**: Latitude ${SITE.coordinates.latitude}, Longitude ${SITE.coordinates.longitude}
 - **Google Maps URL**: ${SITE.mapsHref}
+- **Nearest Airport**: ${SITE.nearestAirport.name} (IATA: \`${SITE.nearestAirport.iataCode}\`, also known as ${SITE.nearestAirport.shortName})
+- **Airport Proximity**: Close to ${SITE.nearestAirport.name} (${SITE.nearestAirport.iataCode}) in southern Harare — ideal for arriving and departing international or regional travellers, visiting families and diaspora guests.
 - **Host / Proprietor**: ${SITE.host}
 - **Telephone (E.164)**: ${SITE.phoneE164}
 - **Telephone (Local Zimbabwe)**: ${SITE.phoneDisplay}
@@ -156,6 +159,7 @@ When guests book overnight accommodation at ${SITE.name}, they receive exclusive
    - Spacious paved outdoor yard and parking
    - Quiet residential street in Mainway Meadows, Waterfalls
    - Secure gated perimeter
+   - ${SITE.nearestAirport.proximityLabel}
 
 ### Overnight Pricing
 - **Standard Nightly Rate**: ${currency(stayRate)} USD per night for the full 4-bedroom house.

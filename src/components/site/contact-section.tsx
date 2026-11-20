@@ -32,6 +32,7 @@ export function ContactSection() {
                   <p className="contact-detail__address">
                     2007 Makoni St, Mainway Meadows, Waterfalls, Harare
                   </p>
+                  <span>{SITE.nearestAirport.proximityLabel}</span>
                   <a
                     href={SITE.mapsHref}
                     target="_blank"

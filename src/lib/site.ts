@@ -3,11 +3,11 @@ export const SITE = {
   wordmark: 'The Pink House',
   domain: 'www.thepinkhouse.co.zw',
   url: 'https://www.thepinkhouse.co.zw',
-  tagline: 'Private 4-Bedroom Guesthouse & Intimate Garden Venue in Harare',
+  tagline: 'Private 4-Bedroom Guesthouse & Intimate Garden Venue Near Harare Airport',
   description:
-    'A private four-bedroom guesthouse and neat garden venue at 2007 Makoni St, Mainway Meadows, Waterfalls, Harare, Zimbabwe. Full-house overnight stays from $80 a night and outdoor functions for up to 30 guests from $150.',
+    'A private 4-bedroom guesthouse and garden venue in Mainway Meadows, Waterfalls, Harare — close to Robert Gabriel Mugabe International Airport (HRE). Full-house stays from $80/night and outdoor functions for up to 30 guests from $150.',
   shortDescription:
-    'A private four-bedroom guesthouse and intimate garden venue in Mainway Meadows, Waterfalls, Harare.',
+    'A private four-bedroom guesthouse and intimate garden venue in Mainway Meadows, Waterfalls, Harare — close to Robert Gabriel Mugabe International Airport (HRE).',
   address: '2007 Makoni St, Mainway Meadows, Waterfalls, Harare',
   streetAddress: '2007 Makoni St',
   suburb: 'Mainway Meadows, Waterfalls',
@@ -15,6 +15,17 @@ export const SITE = {
   country: 'Zimbabwe',
   countryCode: 'ZW',
   area: 'Mainway Meadows, Waterfalls, Harare',
+  nearestAirport: {
+    name: 'Robert Gabriel Mugabe International Airport',
+    shortName: 'Harare International Airport',
+    alternateNames: [
+      'Harare International Airport',
+      'RGM International Airport',
+      'Harare Airport',
+    ],
+    iataCode: 'HRE',
+    proximityLabel: 'Close to Robert Gabriel Mugabe International Airport (HRE)',
+  },
   coordinates: {
     latitude: -17.9189,
     longitude: 31.0458,
@@ -57,7 +68,12 @@ export const FAQS: readonly FaqItem[] = [
   {
     question: 'Where is The Pink House located in Harare?',
     answer:
-      'The Pink House is located at 2007 Makoni Street, Mainway Meadows, Waterfalls, Harare, Zimbabwe. It sits on a quiet residential street with a secure gated perimeter and paved outdoor parking, easily reached from Harare city centre and Robert Gabriel Mugabe International Airport.',
+      'The Pink House is located at 2007 Makoni Street, Mainway Meadows, Waterfalls, Harare, Zimbabwe — in southern Harare, close to Robert Gabriel Mugabe International Airport (HRE). It sits on a quiet residential street with a secure gated perimeter and paved outdoor parking, with convenient access to both the airport and Harare city centre.',
+  },
+  {
+    question: 'Is The Pink House close to the airport in Harare?',
+    answer:
+      'Yes. The Pink House is close to Robert Gabriel Mugabe International Airport (HRE), Harare’s international airport. Situated in Mainway Meadows, Waterfalls in southern Harare, the guesthouse is a quiet, convenient whole-house base for international and regional travellers, visiting families, diaspora guests and business visitors arriving in or departing from Harare. Guests are asked to arrange their arrival time with Mrs Ncube ahead of coming through the gate.',
   },
   {
     question: 'Do we get the whole house to ourselves when we book a stay?',

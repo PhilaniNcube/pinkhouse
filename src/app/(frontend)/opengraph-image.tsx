@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { SITE } from '@/lib/site'
 
 export const alt =
-  'The Pink House — Private 4-Bedroom Guesthouse & Intimate Garden Venue at 2007 Makoni St, Mainway Meadows, Waterfalls, Harare'
+  'The Pink House — Private 4-Bedroom Guesthouse & Intimate Garden Venue near Robert Gabriel Mugabe International Airport (HRE) in Waterfalls, Harare'
 export const size = {
   width: 1200,
   height: 630,
@@ -85,8 +85,8 @@ export default function OpenGraphImage() {
                 maxWidth: '540px',
               }}
             >
-              A private four-bedroom guesthouse and neat garden venue in
-              peaceful Mainway Meadows, Waterfalls, Harare.
+              A private four-bedroom guesthouse and neat garden venue in Mainway
+              Meadows, Waterfalls, Harare — close to Harare Airport.
             </div>
           </div>
 

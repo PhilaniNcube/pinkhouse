@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default:
-      'The Pink House | Guesthouse & Garden Venue in Waterfalls, Harare',
+      'The Pink House | Guesthouse & Garden Venue Near Harare Airport',
     template: '%s | The Pink House, Harare',
   },
   description: SITE.description,
@@ -39,6 +39,13 @@ export const metadata: Metadata = {
     'day rest guesthouse Harare',
     '2007 Makoni St Mainway Meadows',
     'Mrs Ncube Pink House',
+    'guesthouse near Harare airport',
+    'accommodation near Robert Gabriel Mugabe International Airport',
+    'Harare airport guesthouse',
+    'lodging near HRE airport Harare',
+    'house rental near Harare International Airport',
+    'stays near RGM airport Harare',
+    'airport accommodation Waterfalls Harare',
   ],
   authors: [{ name: SITE.host, url: siteUrl }],
   creator: SITE.name,
@@ -61,9 +68,10 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'The Pink House | Private 4-Bedroom Guesthouse & Garden Venue in Harare',
+    title:
+      'The Pink House | 4-Bedroom Guesthouse & Garden Venue Near Harare Airport',
     description:
-      'Whole-house overnight stays from $80/night and intimate outdoor garden functions for up to 30 guests at 2007 Makoni St, Mainway Meadows, Waterfalls, Harare.',
+      'Private 4-bedroom guesthouse and intimate garden venue in Mainway Meadows, Waterfalls, Harare, close to Robert Gabriel Mugabe International Airport (HRE). Stays from $80/night; functions up to 30 guests.',
     url: '/',
     siteName: SITE.name,
     locale: SITE.locale,
@@ -74,9 +82,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'The Pink House | Guesthouse & Garden Venue in Waterfalls, Harare',
+    title: 'The Pink House | Guesthouse & Garden Venue Near Harare Airport',
     description:
-      'A private four-bedroom guesthouse and neat garden venue at 2007 Makoni St, Mainway Meadows, Waterfalls, Harare. Stays from $80/night. Functions for up to 30 guests.',
+      'Private 4-bedroom guesthouse and neat garden venue in Mainway Meadows, Waterfalls, Harare — close to Harare International Airport (HRE). Stays from $80/night; functions up to 30 guests.',
   },
   robots: {
     index: true,
@@ -120,6 +128,8 @@ export const metadata: Metadata = {
     'contact:host': SITE.host,
     'contact:phone': SITE.phoneE164,
     'contact:address': `${SITE.address}, ${SITE.country}`,
+    'location:nearest_airport': `${SITE.nearestAirport.name} (${SITE.nearestAirport.iataCode})`,
+    'location:airport_proximity': SITE.nearestAirport.proximityLabel,
   },
 }
 

@@ -1,4 +1,5 @@
 import type { GalleryPhoto } from '@/features/home/home-data'
+import { SITE } from '@/lib/site'
 import { StartBookingButton } from './start-booking-button'
 
 interface HouseSectionProps {
@@ -13,6 +14,7 @@ const houseFeatures = [
   'Fitted kitchen: double-door fridge, stove, oven, microwave, kettle',
   'Spacious paved outdoors and a neat garden',
   'Quiet street, secure gated perimeter',
+  SITE.nearestAirport.proximityLabel,
 ]
 
 export function HouseSection({ bedroom }: HouseSectionProps) {

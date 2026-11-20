@@ -27,7 +27,7 @@ export function HeroCopy({
 
       <p className="hero__lead">
         A spacious 4-bedroom guesthouse and neat garden venue in peaceful
-        Mainway Meadows, Waterfalls, Harare.
+        Mainway Meadows, Waterfalls, Harare — close to the airport.
       </p>
 
       <dl className="hero__rates">

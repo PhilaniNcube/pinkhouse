@@ -26,10 +26,7 @@ export function SiteFooter({ credits }: SiteFooterProps) {
             <a className="footer-wordmark" href="#top">
               The Pink House
             </a>
-            <p>
-              A private four-bedroom guesthouse and intimate garden venue in
-              Mainway Meadows, Waterfalls, Harare.
-            </p>
+            <p>{SITE.shortDescription}</p>
           </div>
 
           <div className="site-footer__links">
