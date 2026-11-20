@@ -1,5 +1,14 @@
 import path from 'node:path'
+import { revalidateTag } from 'next/cache'
 import type { CollectionConfig } from 'payload'
+
+const revalidateMediaCache = () => {
+  try {
+    revalidateTag('gallery', 'max')
+  } catch {
+    // Ignore outside Next.js request context (e.g. CLI seed script)
+  }
+}
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -17,6 +26,10 @@ export const Media: CollectionConfig = {
     create: ({ req }) => Boolean(req.user),
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),
+  },
+  hooks: {
+    afterChange: [() => revalidateMediaCache()],
+    afterDelete: [() => revalidateMediaCache()],
   },
   upload: {
     staticDir: path.resolve(process.cwd(), 'public/media'),

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { z } from 'zod'
@@ -452,6 +452,7 @@ export async function createBookingAction(
       },
     })
 
+    updateTag('availability')
     revalidatePath('/')
 
     const reference = booking.bookingReference || ''

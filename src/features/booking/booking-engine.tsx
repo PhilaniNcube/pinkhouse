@@ -31,7 +31,6 @@ import {
   isAfter,
   monthOf,
   nightsBetween,
-  todayISO,
   type ISODate,
 } from '@/lib/dates'
 import {
@@ -114,7 +113,7 @@ export function BookingEngine({
   availability,
   suggestedStay,
 }: BookingEngineProps) {
-  const today = todayISO()
+  const today = availability.generatedOn
   const fallbackStay =
     suggestedStay ??
     (() => {

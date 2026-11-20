@@ -10,7 +10,6 @@ import {
   isAfter,
   isSameOrAfter,
   monthOf,
-  todayISO,
   type ISODate,
 } from '@/lib/dates'
 import {
@@ -51,7 +50,7 @@ export function AvailabilityCalendar({
   onDateClick,
   error,
 }: AvailabilityCalendarProps) {
-  const today = todayISO()
+  const today = snapshot.generatedOn
   const firstBookable = addDays(today, 1)
   const minMonth = monthOf(today)
   const maxMonth = monthOf(addDays(today, 365))

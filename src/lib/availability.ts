@@ -254,7 +254,7 @@ export function findNextStay(
   nights = 3,
   searchDays = 120,
 ): { checkIn: ISODate; checkOut: ISODate } | null {
-  const start = addDays(todayISO(), 1)
+  const start = addDays(snapshot.generatedOn, 1)
   for (let offset = 0; offset < searchDays; offset += 1) {
     const checkIn = addDays(start, offset)
     const checkOut = addDays(checkIn, nights)
@@ -270,7 +270,7 @@ export function findNextDate(
   bookingType: BookingType,
   searchDays = 90,
 ): ISODate | null {
-  const start = addDays(todayISO(), 1)
+  const start = addDays(snapshot.generatedOn, 1)
   const unavailable = unavailableSetFor(snapshot, bookingType)
   for (let offset = 0; offset < searchDays; offset += 1) {
     const date = addDays(start, offset)

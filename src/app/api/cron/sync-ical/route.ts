@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { connection } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -28,8 +28,9 @@ async function handleSync(request: Request): Promise<Response> {
     const payload = await getPayload({ config })
     const report = await syncAllCalendars(payload)
 
-    // Availability is derived per request, but clearing the path makes the
-    // next visit pick up cancellations immediately after a sync.
+    // Availability is derived per request, but clearing the tag and path makes
+    // the next visit pick up cancellations immediately after a sync.
+    revalidateTag('availability', 'max')
     revalidatePath('/')
 
     return Response.json(report, {

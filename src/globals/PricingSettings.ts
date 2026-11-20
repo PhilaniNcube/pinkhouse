@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache'
 import type { GlobalConfig } from 'payload'
 
 export const PricingSettings: GlobalConfig = {
@@ -11,6 +12,17 @@ export const PricingSettings: GlobalConfig = {
   access: {
     read: () => true,
     update: ({ req }) => Boolean(req.user),
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag('pricing-settings', 'max')
+        } catch {
+          // Ignore outside Next.js request context (e.g. CLI seed script)
+        }
+      },
+    ],
   },
   fields: [
     {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useId, useState } from 'react'
+import { useActionState, useEffect, useId, useState } from 'react'
 import { CalendarDays, MessageCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -37,7 +37,12 @@ export function EnquiryForm() {
   )
   const [topic, setTopic] = useState('general')
   const [preferredDate, setPreferredDate] = useState('')
+  const [minDate, setMinDate] = useState<string | undefined>(undefined)
   const formId = useId()
+
+  useEffect(() => {
+    setMinDate(todayISO())
+  }, [])
 
   return (
     <div className="enquiry-form-wrap">
@@ -146,7 +151,7 @@ export function EnquiryForm() {
               type="date"
               value={preferredDate}
               onChange={(event) => setPreferredDate(event.target.value)}
-              min={todayISO()}
+              min={minDate}
               className="num"
             />
             <span

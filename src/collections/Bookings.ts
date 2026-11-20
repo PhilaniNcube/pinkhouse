@@ -1,4 +1,13 @@
+import { revalidateTag } from 'next/cache'
 import type { CollectionConfig } from 'payload'
+
+const revalidateAvailabilityCache = () => {
+  try {
+    revalidateTag('availability', 'max')
+  } catch {
+    // Ignore outside Next.js request context
+  }
+}
 
 const yearInHarare = () =>
   new Intl.DateTimeFormat('en', {
@@ -82,6 +91,8 @@ export const Bookings: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [() => revalidateAvailabilityCache()],
+    afterDelete: [() => revalidateAvailabilityCache()],
   },
   fields: [
     {

@@ -1,4 +1,13 @@
+import { revalidateTag } from 'next/cache'
 import type { CollectionConfig } from 'payload'
+
+const revalidateSpecialsCache = () => {
+  try {
+    revalidateTag('specials', 'max')
+  } catch {
+    // Ignore outside Next.js request context (e.g. CLI seed script)
+  }
+}
 
 const slugify = (value: string) =>
   value
@@ -41,6 +50,8 @@ export const Specials: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [() => revalidateSpecialsCache()],
+    afterDelete: [() => revalidateSpecialsCache()],
   },
   fields: [
     {

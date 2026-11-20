@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { connection } from 'next/server'
 
 import { SiteHeader } from '@/components/site/site-header'
 import { Hero } from '@/components/site/hero'
@@ -12,7 +11,13 @@ import { FaqSection } from '@/components/site/faq-section'
 import { SiteFooter } from '@/components/site/site-footer'
 import { ContactSection } from '@/components/site/contact-section'
 import { BookingEngine } from '@/features/booking/booking-engine'
-import { getHomeData } from '@/features/home/home-data'
+import {
+  DEFAULT_PRICING,
+  getAvailabilityData,
+  getGalleryData,
+  getPricingBannerData,
+  getSpecialsData,
+} from '@/features/home/home-data'
 import { FAQS, SITE } from '@/lib/site'
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || SITE.url).replace(
@@ -25,23 +30,166 @@ function absolutePhotoUrl(src: string): string {
   return `${siteUrl}${src.startsWith('/') ? '' : '/'}${src}`
 }
 
-async function HomePage() {
-  await connection()
-  const data = await getHomeData()
-  const bedroom = data.gallery.find((photo) => photo.category === 'bedrooms')
-  const lounge = data.gallery.find((photo) => photo.category === 'lounge')
+async function HeaderSectionServer() {
+  const [pricingBanner, specialsData] = await Promise.all([
+    getPricingBannerData(),
+    getSpecialsData(),
+  ])
+
+  const featuredSpecial =
+    specialsData.specials.find(
+      (special) => special.id === pricingBanner.featuredSpecialId,
+    ) ?? null
+
+  return (
+    <SiteHeader
+      showBanner={
+        pricingBanner.showSpecialsBannerFlag &&
+        specialsData.specials.length > 0
+      }
+      bannerHeadline={pricingBanner.bannerHeadline}
+      featuredSpecial={featuredSpecial}
+    />
+  )
+}
+
+function HeaderSectionFallback() {
+  return (
+    <SiteHeader
+      showBanner={false}
+      bannerHeadline=""
+      featuredSpecial={null}
+    />
+  )
+}
+
+async function HeroSectionServer() {
+  const [pricingBanner, specialsData, galleryData, availabilityData] =
+    await Promise.all([
+      getPricingBannerData(),
+      getSpecialsData(),
+      getGalleryData(),
+      getAvailabilityData(),
+    ])
+
+  return (
+    <Hero
+      heroPhoto={galleryData.heroPhoto}
+      pricing={pricingBanner.pricing}
+      specials={specialsData.specials}
+      staySpecial={specialsData.staySpecial}
+      functionBundleSpecial={specialsData.functionBundleSpecial}
+      availability={availabilityData.availability}
+      suggestedStay={availabilityData.suggestedStay}
+      suggestedFunctionDate={availabilityData.suggestedFunctionDate}
+      today={availabilityData.today}
+    />
+  )
+}
+
+function HeroSectionFallback() {
+  return (
+    <section className="hero" id="top" aria-labelledby="hero-title">
+      <div className="container hero__grid">
+        <div className="hero__copy">
+          <h1 className="hero__title" id="hero-title">
+            <span className="hero__welcome">Welcome to</span>
+            <span className="hero__name">The Pink House</span>
+          </h1>
+          <p className="hero__lead">
+            A spacious 4-bedroom guesthouse and neat garden venue in peaceful
+            Mainway Meadows, Waterfalls, Harare.
+          </p>
+        </div>
+        <div className="hero__media">
+          <div className="hero__main-photo hero__main-photo--empty" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+async function HouseSectionServer() {
+  const { bedroomPhoto } = await getGalleryData()
+  return <HouseSection bedroom={bedroomPhoto} />
+}
+
+async function FunctionsSectionServer() {
+  const { pricing } = await getPricingBannerData()
+  return <FunctionsSection pricing={pricing} />
+}
+
+async function DayServicesSectionServer() {
+  const { pricing } = await getPricingBannerData()
+  return <DayServicesSection pricing={pricing} />
+}
+
+async function SpecialsSectionServer() {
+  const [{ specials }, { loungePhoto }] = await Promise.all([
+    getSpecialsData(),
+    getGalleryData(),
+  ])
+  return <SpecialsSection specials={specials} leadPhoto={loungePhoto} />
+}
+
+async function GallerySectionServer() {
+  const { gallery } = await getGalleryData()
+  return <GallerySection photos={gallery} />
+}
+
+async function BookingEngineServer() {
+  const [{ pricing }, { specials }, availabilityData] = await Promise.all([
+    getPricingBannerData(),
+    getSpecialsData(),
+    getAvailabilityData(),
+  ])
+
+  return (
+    <BookingEngine
+      pricing={pricing}
+      specials={specials}
+      availability={availabilityData.availability}
+      suggestedStay={availabilityData.suggestedStay}
+    />
+  )
+}
+
+function BookingEngineFallback() {
+  return (
+    <div className="booking-engine" role="status" aria-label="Loading availability calendar">
+      <div className="booking-engine__left">
+        <p className="lead">Loading availability calendar…</p>
+      </div>
+      <div className="booking-engine__right" />
+    </div>
+  )
+}
+
+async function FooterSectionServer() {
+  const { credits } = await getGalleryData()
+  return <SiteFooter credits={credits} />
+}
+
+async function StructuredDataServer() {
+  const [pricingBanner, specialsData, galleryData] = await Promise.all([
+    getPricingBannerData(),
+    getSpecialsData(),
+    getGalleryData(),
+  ])
 
   const imageUrls = Array.from(
     new Set(
       [
-        ...(data.heroPhoto ? [absolutePhotoUrl(data.heroPhoto.src)] : []),
-        ...data.gallery.map((photo) => absolutePhotoUrl(photo.src)),
+        ...(galleryData.heroPhoto
+          ? [absolutePhotoUrl(galleryData.heroPhoto.src)]
+          : []),
+        ...galleryData.gallery.map((photo) => absolutePhotoUrl(photo.src)),
         `${siteUrl}/photos/country-gate.jpg`,
       ].filter(Boolean),
     ),
   )
 
-  const specialOffers = data.specials.map((special) => ({
+  const specialOffers = specialsData.specials.map((special) => ({
     '@type': 'Offer',
     '@id': `${siteUrl}/#special-${special.slug}`,
     name: `${special.title} (${special.badgeText})`,
@@ -132,10 +280,10 @@ async function HomePage() {
         logo: `${siteUrl}/favicon.svg`,
         hasMap: SITE.mapsHref,
         sameAs: [SITE.whatsappHref, SITE.mapsHref],
-        priceRange: `$${data.pricing.accommodationNightlyRateUSD} - $${data.pricing.functionBaseRateUSD} USD`,
+        priceRange: `$${pricingBanner.pricing.accommodationNightlyRateUSD} - $${pricingBanner.pricing.functionBaseRateUSD} USD`,
         currenciesAccepted: SITE.currency,
         paymentAccepted: 'Cash, Bank Transfer, Direct Arrangement with Host',
-        maximumAttendeeCapacity: data.pricing.functionMaxGuests,
+        maximumAttendeeCapacity: pricingBanner.pricing.functionMaxGuests,
         numberOfRooms: SITE.bedrooms,
         petsAllowed: false,
         address: {
@@ -240,7 +388,7 @@ async function HomePage() {
             name: 'Overnight accommodation — full 4-bedroom house',
             description:
               'Exclusive overnight stay in the full four-bedroom house, chandelier lounge, dining room, fitted kitchen and garden.',
-            price: data.pricing.accommodationNightlyRateUSD,
+            price: pricingBanner.pricing.accommodationNightlyRateUSD,
             priceCurrency: SITE.currency,
             availability: 'https://schema.org/InStock',
             url: `${siteUrl}/#booking`,
@@ -252,16 +400,16 @@ async function HomePage() {
           {
             '@type': 'Offer',
             '@id': `${siteUrl}/#offer-function`,
-            name: `Outdoor garden & venue hire (up to ${data.pricing.functionMaxGuests} guests)`,
+            name: `Outdoor garden & venue hire (up to ${pricingBanner.pricing.functionMaxGuests} guests)`,
             description:
               'Private outdoor garden and paved venue hire for roora/lobola, family introductions, naming ceremonies, bridal showers, baby showers and milestone birthdays.',
-            price: data.pricing.functionBaseRateUSD,
+            price: pricingBanner.pricing.functionBaseRateUSD,
             priceCurrency: SITE.currency,
             availability: 'https://schema.org/InStock',
             url: `${siteUrl}/#booking`,
             eligibleQuantity: {
               '@type': 'QuantitativeValue',
-              maxValue: data.pricing.functionMaxGuests,
+              maxValue: pricingBanner.pricing.functionMaxGuests,
               unitText: 'guests',
             },
           },
@@ -271,9 +419,9 @@ async function HomePage() {
             name: 'Day services, photo shoots, filming & seminars',
             description:
               'Daytime property hire for daytime rest, seminars, workshops, photo shoots, video/film productions and small church services.',
-            ...(data.pricing.dayServiceStartingRateUSD
+            ...(pricingBanner.pricing.dayServiceStartingRateUSD
               ? {
-                  price: data.pricing.dayServiceStartingRateUSD,
+                  price: pricingBanner.pricing.dayServiceStartingRateUSD,
                   priceCurrency: SITE.currency,
                 }
               : {}),
@@ -321,76 +469,12 @@ async function HomePage() {
   }
 
   return (
-    <>
-      <SiteHeader
-        showBanner={data.showSpecialsBanner}
-        bannerHeadline={data.bannerHeadline}
-        featuredSpecial={data.featuredSpecial}
-      />
-
-      <main id="main">
-        <Hero
-          heroPhoto={data.heroPhoto}
-          pricing={data.pricing}
-          specials={data.specials}
-          staySpecial={data.staySpecial}
-          functionBundleSpecial={data.functionBundleSpecial}
-          availability={data.availability}
-          suggestedStay={data.suggestedStay}
-          suggestedFunctionDate={data.suggestedFunctionDate}
-          today={data.today}
-        />
-
-        <HouseSection bedroom={bedroom} />
-
-        <FunctionsSection pricing={data.pricing} />
-
-        <DayServicesSection pricing={data.pricing} />
-
-        <SpecialsSection specials={data.specials} leadPhoto={lounge} />
-
-        <GallerySection photos={data.gallery} />
-
-        <section className="section booking-section" id="booking">
-          <div className="container">
-            <div className="section-heading section-heading--split">
-              <h2>Check availability</h2>
-              <p className="lead">
-                Pick your dates and special, then send a request.
-              </p>
-            </div>
-
-            <BookingEngine
-              pricing={data.pricing}
-              specials={data.specials}
-              availability={data.availability}
-              suggestedStay={data.suggestedStay}
-            />
-          </div>
-        </section>
-
-        <FaqSection />
-
-        <ContactSection />
-      </main>
-
-      <SiteFooter credits={data.credits} />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
-        }}
-      />
-    </>
-  )
-}
-
-function HomePageLoading() {
-  return (
-    <div className="loading-shell" role="status">
-      Loading The Pink House…
-    </div>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
+      }}
+    />
   )
 }
 
@@ -401,8 +485,61 @@ export default function Page() {
         Skip to content
       </a>
 
-      <Suspense fallback={<HomePageLoading />}>
-        <HomePage />
+      <Suspense fallback={<HeaderSectionFallback />}>
+        <HeaderSectionServer />
+      </Suspense>
+
+      <main id="main">
+        <Suspense fallback={<HeroSectionFallback />}>
+          <HeroSectionServer />
+        </Suspense>
+
+        <Suspense fallback={<HouseSection bedroom={undefined} />}>
+          <HouseSectionServer />
+        </Suspense>
+
+        <Suspense fallback={<FunctionsSection pricing={DEFAULT_PRICING} />}>
+          <FunctionsSectionServer />
+        </Suspense>
+
+        <Suspense fallback={<DayServicesSection pricing={DEFAULT_PRICING} />}>
+          <DayServicesSectionServer />
+        </Suspense>
+
+        <Suspense fallback={<SpecialsSection specials={[]} />}>
+          <SpecialsSectionServer />
+        </Suspense>
+
+        <Suspense fallback={<GallerySection photos={[]} />}>
+          <GallerySectionServer />
+        </Suspense>
+
+        <section className="section booking-section" id="booking">
+          <div className="container">
+            <div className="section-heading section-heading--split">
+              <h2>Check availability</h2>
+              <p className="lead">
+                Pick your dates and special, then send a request.
+              </p>
+            </div>
+
+            <Suspense fallback={<BookingEngineFallback />}>
+              <BookingEngineServer />
+            </Suspense>
+          </div>
+        </section>
+
+        <FaqSection />
+
+        <ContactSection />
+      </main>
+
+      <Suspense fallback={<SiteFooter credits={[]} />}>
+        <FooterSectionServer />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <StructuredDataServer />
       </Suspense>
     </>
   )

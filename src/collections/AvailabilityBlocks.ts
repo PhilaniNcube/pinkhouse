@@ -1,4 +1,13 @@
+import { revalidateTag } from 'next/cache'
 import type { CollectionConfig } from 'payload'
+
+const revalidateAvailabilityCache = () => {
+  try {
+    revalidateTag('availability', 'max')
+  } catch {
+    // Ignore outside Next.js request context
+  }
+}
 
 export const AvailabilityBlocks: CollectionConfig = {
   slug: 'availability-blocks',
@@ -18,6 +27,10 @@ export const AvailabilityBlocks: CollectionConfig = {
     create: ({ req }) => Boolean(req.user),
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),
+  },
+  hooks: {
+    afterChange: [() => revalidateAvailabilityCache()],
+    afterDelete: [() => revalidateAvailabilityCache()],
   },
   fields: [
     {

@@ -1,9 +1,6 @@
-import { connection } from 'next/server'
-
 import { buildLlmsFullMarkdown } from '@/lib/llms'
 
 export async function GET() {
-  await connection()
   const markdown = await buildLlmsFullMarkdown()
 
   return new Response(markdown, {

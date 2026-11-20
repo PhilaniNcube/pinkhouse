@@ -1,7 +1,6 @@
 import 'server-only'
 
-import { cache } from 'react'
-
+import { cacheLife, cacheTag } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -38,6 +37,34 @@ export interface GalleryPhoto {
   creditUrl: string | null
 }
 
+export interface PricingBannerData {
+  pricing: SitePricing
+  bannerHeadline: string
+  showSpecialsBannerFlag: boolean
+  featuredSpecialId: number | null
+}
+
+export interface SpecialsBundleData {
+  specials: PublicSpecial[]
+  staySpecial: PublicSpecial | null
+  functionBundleSpecial: PublicSpecial | null
+}
+
+export interface GalleryData {
+  gallery: GalleryPhoto[]
+  heroPhoto: GalleryPhoto | null
+  bedroomPhoto: GalleryPhoto | undefined
+  loungePhoto: GalleryPhoto | undefined
+  credits: Array<{ name: string; url: string | null }>
+}
+
+export interface AvailabilityData {
+  availability: AvailabilitySnapshot
+  suggestedStay: { checkIn: string; checkOut: string } | null
+  suggestedFunctionDate: string | null
+  today: string
+}
+
 export interface HomeData {
   pricing: SitePricing
   specials: PublicSpecial[]
@@ -55,7 +82,7 @@ export interface HomeData {
   today: string
 }
 
-const DEFAULT_PRICING: SitePricing = {
+export const DEFAULT_PRICING: SitePricing = {
   accommodationNightlyRateUSD: 80,
   functionBaseRateUSD: 150,
   functionMaxGuests: 30,
@@ -103,59 +130,18 @@ function toGalleryPhoto(item: GalleryItem): GalleryPhoto | null {
   }
 }
 
-export const getHomeData = cache(async (): Promise<HomeData> => {
-  const payload = await getPayload({ config })
-  const today = todayISO()
+export async function getPricingBannerData(): Promise<PricingBannerData> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('pricing-settings')
 
-  const [
-    settings,
-    specialsResult,
-    galleryResult,
-    bookingsResult,
-    blocksResult,
-    externalBlocksResult,
-  ] = await Promise.all([
-    payload.findGlobal({ slug: 'pricing-settings', depth: 1 }),
-    payload.find({
-      collection: 'specials',
-      where: { isActive: { equals: true } },
-      limit: 100,
-      depth: 0,
-      sort: 'createdAt',
-    }),
-    payload.find({
-      collection: 'gallery-items',
-      limit: 24,
-      depth: 2,
-      sort: 'displayOrder',
-    }),
-    payload.find({
-      collection: 'bookings',
-      where: { status: { in: ['pending', 'confirmed'] } },
-      limit: 1000,
-      depth: 0,
-    }),
-    payload.find({
-      collection: 'availability-blocks',
-      limit: 500,
-      depth: 0,
-    }),
-    payload.find({
-      collection: 'external-blocks',
-      where: { endDate: { greater_than_equal: today } },
-      pagination: false,
-      depth: 0,
-    }),
-  ])
+  const payload = await getPayload({ config })
+  const settings = await payload.findGlobal({
+    slug: 'pricing-settings',
+    depth: 1,
+  })
 
   const pricing = settings ? toSitePricing(settings) : DEFAULT_PRICING
-
-  const allSpecials = specialsResult.docs
-    .map(toPublicSpecial)
-    .filter(
-      (special) =>
-        special.validFrom <= today && special.validUntil >= today,
-    )
 
   const featuredSpecialId =
     settings?.featuredSpecial && typeof settings.featuredSpecial === 'object'
@@ -164,14 +150,73 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
         ? settings.featuredSpecial
         : null
 
-  const featuredSpecial =
-    allSpecials.find((special) => special.id === featuredSpecialId) ?? null
+  return {
+    pricing,
+    bannerHeadline:
+      settings?.bannerHeadline ||
+      'Book a function and a night in the house together, and save.',
+    showSpecialsBannerFlag: settings?.showSpecialsBanner ?? true,
+    featuredSpecialId,
+  }
+}
 
-  const galleryDocs = galleryResult.docs
-  const allGallery = galleryDocs.flatMap((item) => {
+export async function getSpecialsData(): Promise<SpecialsBundleData> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('specials')
+
+  const payload = await getPayload({ config })
+  const today = todayISO()
+
+  const specialsResult = await payload.find({
+    collection: 'specials',
+    where: { isActive: { equals: true } },
+    limit: 100,
+    depth: 0,
+    sort: 'createdAt',
+  })
+
+  const specials = specialsResult.docs
+    .map(toPublicSpecial)
+    .filter(
+      (special) =>
+        special.validFrom <= today && special.validUntil >= today,
+    )
+
+  const staySpecial =
+    specials.find(
+      (special) =>
+        special.category === 'accommodation' && (special.minNights ?? 0) > 1,
+    ) ?? null
+
+  const functionBundleSpecial =
+    specials.find((special) => special.category === 'bundle') ?? null
+
+  return {
+    specials,
+    staySpecial,
+    functionBundleSpecial,
+  }
+}
+
+export async function getGalleryData(): Promise<GalleryData> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('gallery')
+
+  const payload = await getPayload({ config })
+  const galleryResult = await payload.find({
+    collection: 'gallery-items',
+    limit: 24,
+    depth: 2,
+    sort: 'displayOrder',
+  })
+
+  const allGallery = galleryResult.docs.flatMap((item) => {
     const photo = toGalleryPhoto(item)
     return photo ? [photo] : []
   })
+
   const heroPhoto =
     allGallery.find((photo) => photo.category === 'exterior') ??
     allGallery[0] ??
@@ -213,6 +258,8 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
   })
 
   const gallery = selectedGallery.slice(0, 6)
+  const bedroomPhoto = gallery.find((photo) => photo.category === 'bedrooms')
+  const loungePhoto = gallery.find((photo) => photo.category === 'lounge')
 
   const creditMap = new Map<string, { name: string; url: string | null }>()
   for (const item of [...gallery, ...(heroPhoto ? [heroPhoto] : [])]) {
@@ -224,6 +271,44 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
       })
     }
   }
+
+  return {
+    gallery,
+    heroPhoto,
+    bedroomPhoto,
+    loungePhoto,
+    credits: Array.from(creditMap.values()),
+  }
+}
+
+export async function getAvailabilityData(): Promise<AvailabilityData> {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('availability')
+
+  const payload = await getPayload({ config })
+  const today = todayISO()
+
+  const [bookingsResult, blocksResult, externalBlocksResult] =
+    await Promise.all([
+      payload.find({
+        collection: 'bookings',
+        where: { status: { in: ['pending', 'confirmed'] } },
+        limit: 1000,
+        depth: 0,
+      }),
+      payload.find({
+        collection: 'availability-blocks',
+        limit: 500,
+        depth: 0,
+      }),
+      payload.find({
+        collection: 'external-blocks',
+        where: { endDate: { greater_than_equal: today } },
+        pagination: false,
+        depth: 0,
+      }),
+    ])
 
   const occupancies = bookingsResult.docs.flatMap((booking) => {
     const occupancy = toBookingOccupancy(booking)
@@ -248,39 +333,48 @@ export const getHomeData = cache(async (): Promise<HomeData> => {
   const suggestedStay =
     findNextStay(availability, 3, 150) ??
     findNextStay(availability, 1, 150)
-
-  const staySpecial =
-    allSpecials.find(
-      (special) =>
-        special.category === 'accommodation' && (special.minNights ?? 0) > 1,
-    ) ?? null
-
-  const functionBundleSpecial =
-    allSpecials.find((special) => special.category === 'bundle') ?? null
-
-  // The day-service date is derived on the client from the same snapshot.
   const suggestedFunctionDate = findNextDate(availability, 'function', 150)
 
   return {
-    pricing,
-    specials: allSpecials,
-    featuredSpecial,
-    bannerHeadline:
-      settings?.bannerHeadline ||
-      'Book a function and a night in the house together, and save.',
-    showSpecialsBanner:
-      (settings?.showSpecialsBanner ?? true) && allSpecials.length > 0,
-    gallery,
-    heroPhoto,
-    credits: Array.from(creditMap.values()),
     availability,
     suggestedStay,
     suggestedFunctionDate,
-    staySpecial,
-    functionBundleSpecial,
     today,
   }
-})
+}
+
+export async function getHomeData(): Promise<HomeData> {
+  const [pricingBanner, specialsData, galleryData, availabilityData] =
+    await Promise.all([
+      getPricingBannerData(),
+      getSpecialsData(),
+      getGalleryData(),
+      getAvailabilityData(),
+    ])
+
+  const featuredSpecial =
+    specialsData.specials.find(
+      (special) => special.id === pricingBanner.featuredSpecialId,
+    ) ?? null
+
+  return {
+    pricing: pricingBanner.pricing,
+    specials: specialsData.specials,
+    featuredSpecial,
+    bannerHeadline: pricingBanner.bannerHeadline,
+    showSpecialsBanner:
+      pricingBanner.showSpecialsBannerFlag && specialsData.specials.length > 0,
+    gallery: galleryData.gallery,
+    heroPhoto: galleryData.heroPhoto,
+    credits: galleryData.credits,
+    availability: availabilityData.availability,
+    suggestedStay: availabilityData.suggestedStay,
+    suggestedFunctionDate: availabilityData.suggestedFunctionDate,
+    staySpecial: specialsData.staySpecial,
+    functionBundleSpecial: specialsData.functionBundleSpecial,
+    today: availabilityData.today,
+  }
+}
 
 export function specialCardPriceLabel(special: PublicSpecial): string {
   return currency(special.specialPriceUSD)
