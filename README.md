@@ -18,6 +18,9 @@ The project is a Next.js 16 App Router application with Payload CMS, Tailwind CS
 - Server-side availability and price calculation on submission. Client values are never trusted.
 - A real reservation request workflow, no online payment. Each request receives a reference such as `PH-2026-0042` and starts in `pending`.
 - A database-backed contact enquiry form for Mrs Ncube.
+- Transactional email notifications powered by **Resend** and **React Email** (and integrated with Payload CMS via `@payloadcms/email-resend`):
+  - Admin notifications sent to `ncbphi001@gmail.com`, `pnavaya@yahoo.co.uk`, and `everncube@gmail.com` for every new reservation request and contact enquiry, complete with pricing ledgers, direct Payload Admin links, and pre-filled WhatsApp click-to-chat reply buttons.
+  - Guest confirmation emails sent automatically whenever a guest includes their email address on a reservation or enquiry.
 - Payload admin for rates, the announcement strip, specials, gallery, media, reservations, enquiries and blocked dates.
 - Complete SEO, AEO (Answer Engine Optimization) and LLM discovery for `https://www.thepinkhouse.co.zw`:
   - Canonical metadata, Open Graph, X/Twitter large summary cards, generated OG/Twitter social preview images, Apple touch icon, web manifest and Harare geo-coordinates.
@@ -34,6 +37,7 @@ The project is a Next.js 16 App Router application with Payload CMS, Tailwind CS
 | Styling | Tailwind CSS 4, custom design tokens, shadcn-style primitives |
 | CMS | Payload 3.93 embedded in Next.js |
 | Database | Turso / libSQL via `@payloadcms/db-sqlite` |
+| Email | Resend & React Email (`@payloadcms/email-resend`, `resend`, `@react-email/components`) |
 | Images | Cloudflare R2 via the S3-compatible storage adapter, public bucket URL |
 | Icons | Lucide |
 | Fonts | Raleway Variable, served locally from `@fontsource-variable/raleway` |
@@ -94,6 +98,12 @@ CRON_SECRET=replace-with-a-long-random-string
 
 # Optional protection for the outbound feed.
 CALENDAR_EXPORT_TOKEN=
+
+# Resend & React Email notifications
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=notifications@thepinkhouse.co.zw
+RESEND_FROM_NAME="The Pink House"
+ADMIN_NOTIFICATION_EMAILS=ncbphi001@gmail.com,pnavaya@yahoo.co.uk,everncube@gmail.com
 ```
 
 When all four non-public R2 values are present, the media collection uploads to R2 and file URLs use `R2_PUBLIC_URL`. The bucket must permit public reads, or you must serve it through a Cloudflare custom domain.

@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -14,9 +15,14 @@ import { Media } from './collections/Media'
 import { Specials } from './collections/Specials'
 import { Users } from './collections/Users'
 import { PricingSettings } from './globals/PricingSettings'
+import {
+  getResendFromAddress,
+  getResendFromName,
+} from './lib/email/config'
 
 const siteURL =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://www.thepinkhouse.co.zw'
+const resendApiKey = process.env.RESEND_API_KEY?.trim()
 const r2Bucket = process.env.R2_BUCKET
 const r2Endpoint = process.env.R2_ENDPOINT
 const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID
@@ -35,6 +41,13 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || '',
   telemetry: false,
   sharp,
+  email: resendApiKey
+    ? resendAdapter({
+        apiKey: resendApiKey,
+        defaultFromAddress: getResendFromAddress(),
+        defaultFromName: getResendFromName(),
+      })
+    : undefined,
   admin: {
     user: Users.slug,
     theme: 'light',

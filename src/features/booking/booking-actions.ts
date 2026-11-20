@@ -20,6 +20,7 @@ import {
   todayISO,
   type ISODate,
 } from '@/lib/dates'
+import { sendReservationNotifications } from '@/lib/email/send-notifications'
 import {
   autoSpecialForStay,
   getQuote,
@@ -456,6 +457,31 @@ export async function createBookingAction(
     revalidatePath('/')
 
     const reference = booking.bookingReference || ''
+
+    try {
+      await sendReservationNotifications({
+        payload,
+        id: booking.id,
+        bookingReference: reference,
+        bookingType,
+        eventCategory: data.eventCategory,
+        checkInDate,
+        checkOutDate,
+        nightsCount: quote.nightsCount,
+        guestCount: data.guestCount,
+        guestName: data.guestName,
+        guestPhone: data.guestPhone,
+        guestEmail: data.guestEmail || null,
+        notes: data.notes || null,
+        appliedSpecialTitle: resolved.special?.title || null,
+        promoCodeUsed: resolved.promoCodeUsed || null,
+        standardSubtotalUSD: quote.standardSubtotalUSD,
+        discountAmountUSD: quote.discountAmountUSD,
+        finalTotalUSD: quote.finalTotalUSD,
+      })
+    } catch (emailError) {
+      console.error('Reservation notification dispatch failed', emailError)
+    }
 
     return {
       status: 'success',

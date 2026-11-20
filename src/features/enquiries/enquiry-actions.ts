@@ -4,6 +4,9 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { z } from 'zod'
 
+import type { ISODate } from '@/lib/dates'
+import { sendEnquiryNotifications } from '@/lib/email/send-notifications'
+
 export interface EnquiryActionState {
   status: 'idle' | 'error' | 'success'
   message?: string
@@ -75,7 +78,7 @@ export async function createEnquiryAction(
   const payload = await getPayload({ config })
 
   try {
-    await payload.create({
+    const enquiry = await payload.create({
       collection: 'contact-enquiries',
       depth: 0,
       data: {
@@ -90,6 +93,23 @@ export async function createEnquiryAction(
         status: 'new',
       },
     })
+
+    try {
+      await sendEnquiryNotifications({
+        payload,
+        id: enquiry.id,
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email || null,
+        topic: data.topic,
+        preferredDate: data.preferredDate
+          ? (data.preferredDate as ISODate)
+          : null,
+        message: data.message,
+      })
+    } catch (emailError) {
+      console.error('Enquiry notification dispatch failed', emailError)
+    }
 
     return {
       status: 'success',

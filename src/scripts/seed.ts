@@ -130,29 +130,57 @@ async function upsertMedia(
   return created.id
 }
 
+const defaultAdmins: Array<{ email: string; name: string }> = [
+  { email: 'ncbphi001@gmail.com', name: 'Philemon Ncube' },
+  { email: 'pnavaya@yahoo.co.uk', name: 'P. Navaya' },
+  { email: 'everncube@gmail.com', name: 'Mrs Ncube' },
+]
+
 async function seed() {
   const payload = await getPayload({ config })
 
-  const users = await payload.find({ collection: 'users', limit: 1, depth: 0 })
-  if (!users.docs.length) {
-    const email = process.env.SEED_ADMIN_EMAIL
-    const password = process.env.SEED_ADMIN_PASSWORD
-    if (!email || !password) {
-      throw new Error(
-        'Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD before seeding the first admin user.',
+  const password = process.env.SEED_ADMIN_PASSWORD
+  const extraSeedEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase()
+  const adminAccounts = [...defaultAdmins]
+
+  if (
+    extraSeedEmail &&
+    !adminAccounts.some((admin) => admin.email === extraSeedEmail)
+  ) {
+    adminAccounts.push({
+      email: extraSeedEmail,
+      name: process.env.SEED_ADMIN_NAME || 'Admin',
+    })
+  }
+
+  for (const admin of adminAccounts) {
+    const existing = await payload.find({
+      collection: 'users',
+      where: { email: { equals: admin.email } },
+      limit: 1,
+      depth: 0,
+    })
+
+    if (existing.docs[0]) {
+      console.log(`Admin user ${admin.email} already exists, leaving it untouched.`)
+    } else {
+      if (!password) {
+        throw new Error(
+          'Set SEED_ADMIN_PASSWORD before seeding missing admin users.',
+        )
+      }
+      await payload.create({
+        collection: 'users',
+        data: {
+          name: admin.name,
+          email: admin.email,
+          password,
+        },
+      })
+      console.log(
+        `Created admin user ${admin.email}. Change the password after first login.`,
       )
     }
-    await payload.create({
-      collection: 'users',
-      data: {
-        name: process.env.SEED_ADMIN_NAME || 'Mrs Ncube',
-        email,
-        password,
-      },
-    })
-    console.log(`Created admin user ${email}. Change the password after first login.`)
-  } else {
-    console.log('Admin user already exists, leaving it untouched.')
   }
 
   const galleryPosts = []
