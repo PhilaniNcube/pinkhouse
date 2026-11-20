@@ -19,7 +19,12 @@ The project is a Next.js 16 App Router application with Payload CMS, Tailwind CS
 - A real reservation request workflow, no online payment. Each request receives a reference such as `PH-2026-0042` and starts in `pending`.
 - A database-backed contact enquiry form for Mrs Ncube.
 - Payload admin for rates, the announcement strip, specials, gallery, media, reservations, enquiries and blocked dates.
-- SEO metadata, LodgingBusiness JSON-LD, a skip link and an accessible calendar and forms.
+- Complete SEO, AEO (Answer Engine Optimization) and LLM discovery for `https://www.thepinkhouse.co.zw`:
+  - Canonical metadata, Open Graph, X/Twitter large summary cards, generated OG/Twitter social preview images, Apple touch icon, web manifest and Harare geo-coordinates.
+  - Rich `@graph` JSON-LD (`WebSite`, `WebPage` with `SpeakableSpecification`, `BreadcrumbList`, `LodgingBusiness` + `VacationRental` + `EventVenue`, `House`, `Offer`s and `FAQPage`).
+  - Visible on-page FAQ section (`#faq`) paired with `FAQPage` schema for direct answer engines and voice assistants.
+  - Dynamic `/llms.txt` and `/llms-full.txt` endpoints serving live rates, specials, promo codes, amenities and booking rules in clean Markdown for AI crawlers and LLMs.
+  - `/robots.txt` (with explicit allow rules for search and AI crawlers such as `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `PerplexityBot`, `Google-Extended` and `Applebot-Extended`, while protecting `/admin` and `/api`) and `/sitemap.xml` with property image entries.
 
 ## Stack
 
@@ -66,7 +71,7 @@ For a new production database, create the owner account in `/admin` or run the s
 See `.env.example`. The important values:
 
 ```dotenv
-NEXT_PUBLIC_SITE_URL=https://thepinkhouse.co.zw
+NEXT_PUBLIC_SITE_URL=https://www.thepinkhouse.co.zw
 PAYLOAD_SECRET=replace-with-a-long-random-string
 
 # Turso. A file: URL is supported for local development.
@@ -134,7 +139,7 @@ or hit the protected endpoint (Vercel Cron does this automatically from `vercel.
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" \
-  https://thepinkhouse.co.zw/api/cron/sync-ical
+  https://www.thepinkhouse.co.zw/api/cron/sync-ical
 ```
 
 The endpoint returns a per-source report. Each run:
@@ -158,7 +163,7 @@ OTA reservations occupy the whole unit, so they block overnight stays and stay b
 Use the feed URL in Airbnb's and Booking.com's calendar import settings:
 
 ```text
-https://thepinkhouse.co.zw/api/calendar/export.ics?token=$CALENDAR_EXPORT_TOKEN
+https://www.thepinkhouse.co.zw/api/calendar/export.ics?token=$CALENDAR_EXPORT_TOKEN
 ```
 
 When `CALENDAR_EXPORT_TOKEN` is empty the feed is public. Set it to a long random string to stop bots scraping the booking schedule. The response is sent with `Content-Type: text/calendar; charset=utf-8` and `Cache-Control: no-store, max-age=0`, and dates are exported as all-day `DTSTART;VALUE=DATE` / `DTEND;VALUE=DATE` pairs.
@@ -207,6 +212,16 @@ src/lib/ical/sync.ts                        Inbound OTA feed sync and upserts
 src/lib/ical/export.ts                      RFC 5545 availability calendar
 src/app/api/cron/sync-ical/route.ts         Protected sync endpoint
 src/app/api/calendar/export.ics/route.ts    Public/tokenized outbound feed
+src/app/llms.txt/route.ts                   Concise LLM index (llms.txt standard)
+src/app/llms-full.txt/route.ts              Comprehensive LLM property guide
+src/app/robots.ts                           Search & AI crawler rules
+src/app/sitemap.ts                          XML & image sitemap
+src/app/manifest.ts                         Web application manifest
+src/app/(frontend)/opengraph-image.tsx      Generated 1200x630 Open Graph card
+src/app/(frontend)/twitter-image.tsx        Generated 1200x630 X/Twitter card
+src/app/(frontend)/apple-icon.tsx           Generated 180x180 Apple touch icon
+src/components/site/faq-section.tsx         On-page AEO FAQ accordion
+src/lib/llms.ts                             Live Markdown builder for LLMs
 src/app/(frontend)/globals.css              Design tokens and page system
 src/scripts/seed.ts                         Safe blank-database seed
 src/scripts/sync-ical.ts                    Manual sync command

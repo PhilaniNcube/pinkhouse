@@ -12,7 +12,7 @@ import type { CalendarSource, ExternalBlock } from '@/payload-types'
 
 const FETCH_TIMEOUT_MS = 15_000
 const USER_AGENT =
-  'ThePinkHouseCalendarSync/1.0 (+https://thepinkhouse.co.zw; calendar sync)'
+  'ThePinkHouseCalendarSync/1.0 (+https://www.thepinkhouse.co.zw; calendar sync)'
 
 interface EnvCalendarConfig {
   envKey: 'airbnb' | 'booking'

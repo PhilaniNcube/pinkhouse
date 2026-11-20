@@ -13,6 +13,7 @@ const footerLinks = [
   { href: '#specials', label: 'Specials' },
   { href: '#gallery', label: 'Gallery' },
   { href: '#booking', label: 'Check Availability' },
+  { href: '#faq', label: 'FAQ' },
   { href: '#contact', label: 'Contact' },
 ]
 

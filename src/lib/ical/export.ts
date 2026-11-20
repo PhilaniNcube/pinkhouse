@@ -132,7 +132,7 @@ export async function buildAvailabilityCalendar(
 }
 
 function calendarHost(): string {
-  const fallback = 'thepinkhouse.co.zw'
+  const fallback = 'www.thepinkhouse.co.zw'
   const raw = process.env.NEXT_PUBLIC_SITE_URL
   if (!raw) return fallback
 

@@ -15,7 +15,8 @@ import { Specials } from './collections/Specials'
 import { Users } from './collections/Users'
 import { PricingSettings } from './globals/PricingSettings'
 
-const siteURL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const siteURL =
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.thepinkhouse.co.zw'
 const r2Bucket = process.env.R2_BUCKET
 const r2Endpoint = process.env.R2_ENDPOINT
 const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID
