@@ -18,6 +18,7 @@ import {
   getPricingBannerData,
   getSpecialsData,
 } from '@/features/home/home-data'
+import { nightlyFromSpecial } from '@/lib/pricing'
 import { FAQS, SITE } from '@/lib/site'
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || SITE.url).replace(
@@ -28,6 +29,31 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || SITE.url).replace(
 function absolutePhotoUrl(src: string): string {
   if (/^https?:\/\//i.test(src)) return src
   return `${siteUrl}${src.startsWith('/') ? '' : '/'}${src}`
+}
+
+function nightlyPriceSpecification(price: number) {
+  return {
+    '@type': 'UnitPriceSpecification',
+    price,
+    priceCurrency: SITE.currency,
+    unitCode: 'DAY',
+  }
+}
+
+/**
+ * Google validates every `makesOffer` entry on a lodging business as an overnight
+ * stay, so each rate needs both types, a check-in/out time and a priceSpecification.
+ */
+function lodgingOffer(price: number) {
+  return {
+    '@type': ['Offer', 'LodgingReservation'],
+    checkinTime: SITE.checkinTime,
+    checkoutTime: SITE.checkoutTime,
+    price,
+    priceCurrency: SITE.currency,
+    priceSpecification: nightlyPriceSpecification(price),
+    availability: 'https://schema.org/InStock',
+  }
 }
 
 async function HeaderSectionServer() {
@@ -189,27 +215,51 @@ async function StructuredDataServer() {
     ),
   )
 
-  const specialOffers = specialsData.specials.map((special) => ({
-    '@type': 'Offer',
-    '@id': `${siteUrl}/#special-${special.slug}`,
-    name: `${special.title} (${special.badgeText})`,
-    description: special.description,
-    price: special.specialPriceUSD,
-    priceCurrency: SITE.currency,
-    validFrom: special.validFrom,
-    priceValidUntil: special.validUntil,
-    availability: 'https://schema.org/InStock',
-    url: `${siteUrl}/#specials`,
-    ...(special.minNights && special.minNights > 1
-      ? {
-          eligibleDuration: {
-            '@type': 'QuantitativeValue',
-            minValue: special.minNights,
-            unitCode: 'DAY',
-          },
-        }
-      : {}),
-  }))
+  const staySpecialOffers = specialsData.specials
+    .filter((special) => special.category === 'accommodation')
+    .map((special) => {
+      const nightlyRate =
+        nightlyFromSpecial(special) ?? special.specialPriceUSD
+
+      return {
+        ...lodgingOffer(nightlyRate),
+        '@id': `${siteUrl}/#special-${special.slug}`,
+        name: `${special.title} (${special.badgeText})`,
+        description: special.description,
+        validFrom: special.validFrom,
+        priceValidUntil: special.validUntil,
+        url: `${siteUrl}/#specials`,
+        ...(special.minNights && special.minNights > 1
+          ? {
+              eligibleDuration: {
+                '@type': 'QuantitativeValue',
+                minValue: special.minNights,
+                unitCode: 'DAY',
+              },
+            }
+          : {}),
+      }
+    })
+
+  const otherSpecialOffers = specialsData.specials
+    .filter((special) => special.category !== 'accommodation')
+    .map((special) => ({
+      '@type': 'Offer',
+      '@id': `${siteUrl}/#special-${special.slug}`,
+      name: `${special.title} (${special.badgeText})`,
+      description: special.description,
+      price: special.specialPriceUSD,
+      priceCurrency: SITE.currency,
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: special.specialPriceUSD,
+        priceCurrency: SITE.currency,
+      },
+      validFrom: special.validFrom,
+      priceValidUntil: special.validUntil,
+      availability: 'https://schema.org/InStock',
+      url: `${siteUrl}/#specials`,
+    }))
 
   const nearestAirportEntity = {
     '@type': 'Airport',
@@ -277,6 +327,7 @@ async function StructuredDataServer() {
         '@type': ['LodgingBusiness', 'VacationRental', 'EventVenue'],
         '@id': `${siteUrl}/#lodging`,
         identifier: 'the-pink-house-harare',
+        additionalType: 'House',
         name: SITE.name,
         alternateName: 'The Pink House Guesthouse & Garden Venue',
         description: SITE.description,
@@ -294,6 +345,8 @@ async function StructuredDataServer() {
         maximumAttendeeCapacity: pricingBanner.pricing.functionMaxGuests,
         numberOfRooms: SITE.bedrooms,
         petsAllowed: false,
+        checkinTime: SITE.checkinTime,
+        checkoutTime: SITE.checkoutTime,
         address: {
           '@type': 'PostalAddress',
           streetAddress: SITE.streetAddress,
@@ -334,7 +387,8 @@ async function StructuredDataServer() {
           },
         ],
         containsPlace: {
-          '@type': 'House',
+          '@type': ['Accommodation', 'House'],
+          additionalType: 'EntirePlace',
           '@id': `${siteUrl}/#house`,
           name: 'The Pink House — Full Four-Bedroom Residence',
           description:
@@ -397,53 +451,67 @@ async function StructuredDataServer() {
         ],
         makesOffer: [
           {
-            '@type': 'Offer',
+            ...lodgingOffer(
+              pricingBanner.pricing.accommodationNightlyRateUSD,
+            ),
             '@id': `${siteUrl}/#offer-accommodation`,
             name: 'Overnight accommodation — full 4-bedroom house',
             description:
               'Exclusive overnight stay in the full four-bedroom house, chandelier lounge, dining room, fitted kitchen and garden — conveniently located close to Robert Gabriel Mugabe International Airport (HRE) in Waterfalls, Harare.',
-            price: pricingBanner.pricing.accommodationNightlyRateUSD,
-            priceCurrency: SITE.currency,
-            availability: 'https://schema.org/InStock',
             url: `${siteUrl}/#booking`,
-            itemOffered: {
-              '@type': 'LodgingReservation',
-              name: 'Whole-house overnight stay at The Pink House',
-            },
           },
-          {
-            '@type': 'Offer',
-            '@id': `${siteUrl}/#offer-function`,
-            name: `Outdoor garden & venue hire (up to ${pricingBanner.pricing.functionMaxGuests} guests)`,
-            description:
-              'Private outdoor garden and paved venue hire for roora/lobola, family introductions, naming ceremonies, bridal showers, baby showers and milestone birthdays.',
-            price: pricingBanner.pricing.functionBaseRateUSD,
-            priceCurrency: SITE.currency,
-            availability: 'https://schema.org/InStock',
-            url: `${siteUrl}/#booking`,
-            eligibleQuantity: {
-              '@type': 'QuantitativeValue',
-              maxValue: pricingBanner.pricing.functionMaxGuests,
-              unitText: 'guests',
-            },
-          },
-          {
-            '@type': 'Offer',
-            '@id': `${siteUrl}/#offer-day-services`,
-            name: 'Day services, photo shoots, filming & seminars',
-            description:
-              'Daytime property hire for daytime rest, seminars, workshops, photo shoots, video/film productions and small church services.',
-            ...(pricingBanner.pricing.dayServiceStartingRateUSD
-              ? {
-                  price: pricingBanner.pricing.dayServiceStartingRateUSD,
-                  priceCurrency: SITE.currency,
-                }
-              : {}),
-            availability: 'https://schema.org/InStock',
-            url: `${siteUrl}/#day-services`,
-          },
-          ...specialOffers,
+          ...staySpecialOffers,
         ],
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: 'Garden venue hire, day services and event offers',
+          itemListElement: [
+            {
+              '@type': 'Offer',
+              '@id': `${siteUrl}/#offer-function`,
+              name: `Outdoor garden & venue hire (up to ${pricingBanner.pricing.functionMaxGuests} guests)`,
+              description:
+                'Private outdoor garden and paved venue hire for roora/lobola, family introductions, naming ceremonies, bridal showers, baby showers and milestone birthdays.',
+              price: pricingBanner.pricing.functionBaseRateUSD,
+              priceCurrency: SITE.currency,
+              priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: pricingBanner.pricing.functionBaseRateUSD,
+                priceCurrency: SITE.currency,
+                unitText: 'per function',
+              },
+              availability: 'https://schema.org/InStock',
+              url: `${siteUrl}/#booking`,
+              eligibleQuantity: {
+                '@type': 'QuantitativeValue',
+                maxValue: pricingBanner.pricing.functionMaxGuests,
+                unitText: 'guests',
+              },
+            },
+            {
+              '@type': 'Offer',
+              '@id': `${siteUrl}/#offer-day-services`,
+              name: 'Day services, photo shoots, filming & seminars',
+              description:
+                'Daytime property hire for daytime rest, seminars, workshops, photo shoots, video/film productions and small church services.',
+              ...(pricingBanner.pricing.dayServiceStartingRateUSD
+                ? {
+                    price: pricingBanner.pricing.dayServiceStartingRateUSD,
+                    priceCurrency: SITE.currency,
+                    priceSpecification: {
+                      '@type': 'UnitPriceSpecification',
+                      price: pricingBanner.pricing.dayServiceStartingRateUSD,
+                      priceCurrency: SITE.currency,
+                      unitText: 'per day',
+                    },
+                  }
+                : {}),
+              availability: 'https://schema.org/InStock',
+              url: `${siteUrl}/#day-services`,
+            },
+            ...otherSpecialOffers,
+          ],
+        },
         potentialAction: {
           '@type': 'ReserveAction',
           target: {

@@ -46,6 +46,8 @@ export const SITE = {
   accommodationMaxGuests: 8,
   currency: 'USD',
   locale: 'en_ZW',
+  checkinTime: '14:00:00+02:00',
+  checkoutTime: '10:00:00+02:00',
 } as const
 
 export const NAV_ITEMS = [
